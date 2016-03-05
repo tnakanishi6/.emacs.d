@@ -139,6 +139,11 @@
             (when (equal "Japanese" current-language-environment)
               (setq default-buffer-file-coding-system 'iso-2022-jp))))
 
+;; org
+(add-hook 'org-mode-hook (lambda ()
+                           (define-key org-mode-map "\C-a" 'seq-home)
+                           (define-key org-mode-map "\C-e" 'seq-end)))
+
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"));; MELPAを追加
 (add-to-list 'package-archives  '("marmalade" . "http://marmalade-repo.org/packages/"));; Marmaladeを追加
