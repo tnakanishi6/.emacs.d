@@ -193,6 +193,12 @@
 (use 'undo-tree)
 (global-undo-tree-mode t)
 
+(use 'color-moccur)
+(setq moccur-split-word t)
+(global-set-key (kbd "M-o") 'occur-by-moccur)
+
+(use 'moccur-edit)
+
 (use 'esup)
 
 (use 'sequential-command)
