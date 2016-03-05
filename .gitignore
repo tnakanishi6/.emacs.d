@@ -1,5 +1,6 @@
 ac-comphist.dat
 bookmarks
+.mc-lists.el
 backups/*
 elpa/*
 auto-save-list/*

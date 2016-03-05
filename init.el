@@ -71,9 +71,10 @@
 (setq  gc-cons-threshold (* 10 gc-cons-threshold))
 (setq scroll-conservatively 35 scroll-margin 0 scroll-step 4) ;;scroll
 (setq process-kill-without-query t) ;; kill auto sub-process
-(tool-bar-mode -1) ;; hide tool-bar
+(when window-system (tool-bar-mode -1)) ;; hide tool-bar
+(when window-system (scroll-bar-mode -1)) ;; hide scroll-bar
 (menu-bar-mode -1) ;; hide menu-bar
-(scroll-bar-mode -1) ;; hide scroll-bar
+
 (setq inhibit-startup-message t) ;; hide wellcome page
 (setq-default line-spacing 7) ;; line-spacing
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
@@ -266,4 +267,6 @@
 (setq git-gutter:update-hooks '(after-save-hook after-revert-hook))
 (global-set-key (kbd "C-x n")  'git-gutter:next-diff)
 (global-set-key (kbd "C-x p")  'git-gutter:previous-diff)
+
+(use 's)
 
