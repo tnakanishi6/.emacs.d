@@ -80,15 +80,15 @@
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
 (set-frame-parameter nil 'alpha 95) ;; window-transparent
 (setq-default tab-width 2 indent-tabs-mode nil) ;;default tab-mode
-(setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines 
+(setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines
 (setq visible-bell t) (setq ring-bell-function 'ignore);; turn off beep
 (setq kill-whole-line t) ;; allow kill-line
-(setq backup-directory-alist 
+(setq backup-directory-alist
       (cons (cons ".*" (expand-file-name "~/.emacs.d/backups")) backup-directory-alist)) ;; backup file
-(setq auto-save-default nil) ;; unauto savea 
+(setq auto-save-default nil) ;; unauto savea
 (setq split-height-threshold nil) (setq split-width-threshold nil) ;; window split controll
 (show-paren-mode t) ;;
-(progn  (cua-mode t) 
+(progn  (cua-mode t)
         (setq cua-enable-cua-keys nil)) ;; rectangle select
 (global-hl-line-mode t)
 ;; language settings
@@ -103,10 +103,10 @@
 
 ;; keybinding settings
 (global-set-key (kbd "C-x SPC") 'cua-set-rectangle-mark)
-(global-set-key [f2] 'swap-screen) 
+(global-set-key [f2] 'swap-screen)
 (global-set-key "\C-h" 'delete-backward-char)
 (global-set-key (kbd "C-x TAB") 'indent-region)
-(global-set-key "\M-g" 'goto-line) 
+(global-set-key "\M-g" 'goto-line)
 (progn (define-prefix-command 'windmove-map)
        (global-set-key (kbd "C-c") 'windmove-map)
        (define-key windmove-map "b" 'windmove-left)
@@ -139,6 +139,18 @@
               (setq default-file-name-coding-system 'utf-8))
             (when (equal "Japanese" current-language-environment)
               (setq default-buffer-file-coding-system 'iso-2022-jp))))
+
+;; whitespace
+(require 'whitespace)
+(setq whitespace-style '(face trailings spaces space-mark tab-mark))
+(setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
+(setq whitespace-action '(auto-cleanup))
+(defvar my/bg-color "#263238")
+(setq whitespace-space-regexp "\\(\u3000+\\)")
+(set-face-attribute 'whitespace-trailing nil :foreground my/bg-color :foreground "GreenYellow" :underline t)
+(set-face-attribute 'whitespace-space nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
+(set-face-attribute 'whitespace-tab nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
+(global-whitespace-mode 1)
 
 ;; org
 (add-hook 'org-mode-hook (lambda ()
@@ -210,6 +222,7 @@
 
 (use 'helm)
 (helm-mode +1)
+(global-set-key (kbd "M-x") 'helm-M-x)
 (global-set-key (kbd "C-x C-f") 'helm-find-files)
 (global-set-key (kbd "C-x b") 'helm-mini)
 (global-set-key (kbd "C-c o") 'helm-occur)
@@ -272,4 +285,3 @@
 
 (use 's)
 (require 's)
-
