@@ -196,11 +196,10 @@
 (let ((install-version (aref (cdr (assoc 'yasnippet package-alist)) 0)))
   (setq yas-snippet-dirs
         (list "~/.emacs.d/snippets")))
-;              (format "~/.emacs.d/elpa/yasnippet-%d.%d/snippets" (car install-version) (cadr install-version))
 (yas-global-mode 1)
-(define-key yas-keymap (kbd "C-n") 'yas-next-field-or-maybe-expand)
-(define-key yas-keymap (kbd "C-p") 'yas-prev)
-(custom-set-variables '(yas-trigger-key "TAB"))
+;(define-key yas-keymap (kbd "C-n") 'yas-next-field-or-maybe-expand)
+;(define-key yas-keymap (kbd "C-p") 'yas-prev)
+;(custom-set-variables '(yas-trigger-key "TAB"))
 (define-key yas-minor-mode-map (kbd "C-x i i") 'yas-insert-snippet) ;; 既存スニペットを挿入する
 (define-key yas-minor-mode-map (kbd "C-x i n") 'yas-new-snippet) ;; 新規スニペットを作成するバッファを用意する
 (define-key yas-minor-mode-map (kbd "C-x i v") 'yas-visit-snippet-file)
@@ -269,4 +268,5 @@
 (global-set-key (kbd "C-x p")  'git-gutter:previous-diff)
 
 (use 's)
+(require 's)
 

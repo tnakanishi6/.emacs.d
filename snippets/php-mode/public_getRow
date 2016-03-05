@@ -1,0 +1,13 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : public getRow... ()
+#expand-env: ((yas/indent-line 'fixed) (yas/wrap-around-region 'nil))')'))
+# --
+	private $__$1Row = null;
+
+	private function __get$1Row(){
+		if(is_null($this->__$1Row)){
+			$this->__$1Row = $3$1::getInstance()->findById($this->$2);
+		}
+		return $this->__$1Row;
+	}
+$0

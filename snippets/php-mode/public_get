@@ -1,0 +1,8 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : public get... ()
+#expand-env: ((yas/indent-line 'fixed) (yas/wrap-around-region 'nil))')'))
+# --
+public function get$1(){
+	return !empty($this->${1:$(s-snake-case yas-text)}) ? $this->${1:$(s-snake-case yas-text)} : false;
+}
+$0
