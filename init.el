@@ -291,3 +291,11 @@
 
 (use 's)
 (require 's)
+
+(use 'visual-regexp-steroids)
+(use 'pcre2el)
+(setq vr/engine 'pcre2el) 
+(global-set-key (kbd "C-M-%") 'vr/query-replace)
+(global-set-key (kbd "C-c m") 'vr/mc-mark)
+(global-set-key (kbd "C-M-r") 'vr/isearch-backward)
+(global-set-key (kbd "C-M-s") 'vr/isearch-forward)
