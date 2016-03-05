@@ -86,6 +86,7 @@
       (cons (cons ".*" (expand-file-name "~/.emacs.d/backups")) backup-directory-alist)) ;; backup file
 (setq auto-save-default nil) ;; unauto savea 
 (setq split-height-threshold nil) (setq split-width-threshold nil) ;; window split controll
+(show-paren-mode t) ;;
 (progn  (cua-mode t) 
         (setq cua-enable-cua-keys nil)) ;; rectangle select
 (global-hl-line-mode t)
