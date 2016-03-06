@@ -171,7 +171,7 @@
 (global-auto-complete-mode t)
 (setq ac-delay 0.1)
 (setq ac-auto-show-menu 0.1)
-(setq ac-auto-start 3)
+(setq ac-auto-start 2)
 (setq ac-use-menu-map t)
 (setq ac-dwim t)
 (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet))
@@ -299,3 +299,12 @@
 (global-set-key (kbd "C-c m") 'vr/mc-mark)
 (global-set-key (kbd "C-M-r") 'vr/isearch-backward)
 (global-set-key (kbd "C-M-s") 'vr/isearch-forward)
+
+(use 'paredit);http://www.daregada.sakuraweb.com/paredit_tutorial_ja.html
+(add-hook 'emacs-lisp-mode-hook (lambda ()
+  (enable-paredit-mode)
+  (define-key emacs-lisp-mode-map "\C-h" 'paredit-backward-delete)))
+(add-hook 'scheme-mode-hook (lambda ()
+  (enable-paredit-mode)
+  (define-key scheme-mode-map "\C-h" 'paredit-backward-delete)))
+
