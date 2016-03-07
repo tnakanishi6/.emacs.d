@@ -1,6 +1,8 @@
 ;; initial settings
 (require 'cl)
 (setq initial-major-mode 'emacs-lisp-mode)
+(defun toggle-input-method nil)
+
 
 ;; enviroment settings
 (defun mac? ()    (string-match "apple-darwin" system-configuration))
@@ -198,6 +200,7 @@
 
 (use 'undo-tree)
 (global-undo-tree-mode t)
+(global-set-key (kbd "M-/") 'undo-tree-redo)
 
 (use 'color-moccur)
 (setq moccur-split-word t)
