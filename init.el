@@ -1,6 +1,8 @@
 ;; initial settings
 (require 'cl)
 (setq initial-major-mode 'emacs-lisp-mode)
+(defun toggle-input-method nil)
+
 
 ;; enviroment settings
 (defun mac? ()    (string-match "apple-darwin" system-configuration))
@@ -142,14 +144,20 @@
 
 ;; whitespace
 (require 'whitespace)
-(setq whitespace-style '(face trailings spaces space-mark tab-mark))
-(setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
+(setq whitespace-style '(face trailings spaces space-mark tab-mark tabs))
 (setq whitespace-action '(auto-cleanup))
-(defvar my/bg-color "#263238")
 (setq whitespace-space-regexp "\\(\u3000+\\)")
-(set-face-attribute 'whitespace-trailing nil :foreground my/bg-color :foreground "GreenYellow" :underline t)
-(set-face-attribute 'whitespace-space nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
-(set-face-attribute 'whitespace-tab nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
+
+(defvar my/bg-color "#263238")
+(if window-system
+  (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
+         (set-face-attribute 'whitespace-trailing nil :foreground my/bg-color :foreground "GreenYellow" :underline t)
+         (set-face-attribute 'whitespace-space nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
+         (set-face-attribute 'whitespace-tab nil      :background my/bg-color :foreground "GreenYellow" :weight 'bold))
+  (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\ ?\ ]) (tab-mark ?\t [?\>?\.?\.?\.] [?\\ ?\t])))
+         (set-face-attribute 'whitespace-trailing nil :background "Black"  :foreground "GreenYellow" :underline t)
+         (set-face-attribute 'whitespace-space nil    :background "GreenYellow" :foreground my/bg-color :weight 'bold)
+         (set-face-attribute 'whitespace-tab nil      :background "Black" :foreground "Blue" :underline t)))
 (global-whitespace-mode 1)
 
 ;; org
@@ -189,9 +197,11 @@
 (volatile-highlights-mode t)
 
 (use 'php-mode)
+(add-hook 'php-mode-hook      (lambda () (setq indent-tabs-mode t)))
 
 (use 'undo-tree)
 (global-undo-tree-mode t)
+(global-set-key (kbd "M-/") 'undo-tree-redo)
 
 (use 'color-moccur)
 (setq moccur-split-word t)
@@ -311,3 +321,7 @@
 (require 'tramp)
 (setq-default tramp-default-method "sshx")
 (setq-default tramp-persistency-file-name nil)
+
+(use 'web-mode)
+(add-to-list 'auto-mode-alist '("\\.ctp$" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html?$" . web-mode))
