@@ -314,3 +314,6 @@
   (enable-paredit-mode)
   (define-key scheme-mode-map "\C-h" 'paredit-backward-delete)))
 
+(use 'web-mode)
+(add-to-list 'auto-mode-alist '("\\.ctp$" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html?$" . web-mode))
