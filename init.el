@@ -142,14 +142,20 @@
 
 ;; whitespace
 (require 'whitespace)
-(setq whitespace-style '(face trailings spaces space-mark tab-mark))
-(setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
+(setq whitespace-style '(face trailings spaces space-mark tab-mark tabs))
 (setq whitespace-action '(auto-cleanup))
-(defvar my/bg-color "#263238")
 (setq whitespace-space-regexp "\\(\u3000+\\)")
-(set-face-attribute 'whitespace-trailing nil :foreground my/bg-color :foreground "GreenYellow" :underline t)
-(set-face-attribute 'whitespace-space nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
-(set-face-attribute 'whitespace-tab nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
+
+(defvar my/bg-color "#263238")
+(if window-system
+  (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
+         (set-face-attribute 'whitespace-trailing nil :foreground my/bg-color :foreground "GreenYellow" :underline t)
+         (set-face-attribute 'whitespace-space nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
+         (set-face-attribute 'whitespace-tab nil      :background my/bg-color :foreground "GreenYellow" :weight 'bold))
+  (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\ ?\ ]) (tab-mark ?\t [?\>?\.?\.?\.] [?\\ ?\t])))
+         (set-face-attribute 'whitespace-trailing nil :background "Black"  :foreground "GreenYellow" :underline t)
+         (set-face-attribute 'whitespace-space nil    :background "GreenYellow" :foreground my/bg-color :weight 'bold)
+         (set-face-attribute 'whitespace-tab nil      :background "Black" :foreground "Blue" :underline t)))
 (global-whitespace-mode 1)
 
 ;; org
