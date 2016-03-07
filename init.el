@@ -308,3 +308,6 @@
   (enable-paredit-mode)
   (define-key scheme-mode-map "\C-h" 'paredit-backward-delete)))
 
+(require 'tramp)
+(setq-default tramp-default-method "sshx")
+(setq-default tramp-persistency-file-name nil)
