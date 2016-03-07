@@ -197,6 +197,7 @@
 (volatile-highlights-mode t)
 
 (use 'php-mode)
+(add-hook 'php-mode-hook      (lambda () (setq indent-tabs-mode t)))
 
 (use 'undo-tree)
 (global-undo-tree-mode t)
