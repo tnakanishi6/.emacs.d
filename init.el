@@ -1,6 +1,6 @@
 ;; initial settings
 (require 'cl)
-(setq initial-major-mode 'emacs-lisp-mode)
+(setq initial-major-mode 'text-mode)
 (defun toggle-input-method nil)
 
 
@@ -17,7 +17,9 @@
                   (set-face-attribute 'default nil :family "Consolas" :height 104);; font 設定
                   (set-fontset-font nil 'japanese-jisx0208 (font-spec :family "ＭＳ ゴシック"));; font 設定
                   (setq face-font-rescale-alist '(("ＭＳ ゴシック" . 1.08)));; font 設定
-                  (setq scheme-program-name "gosh -i")))
+                  (setq scheme-program-name "gosh -i")
+                  (setenv "PATH"(concat "c:/Program Files (x86)/PuTTY;" (getenv "PATH")))
+                  (add-to-list 'exec-path"c:/Program Files (x86)/PuTTY;")))
 (if (mac?) (progn (setq ns-command-modifier (quote meta))
                   (setq ns-alternate-modifier (quote super))
                   (setq scheme-program-name "/opt/local/bin/gosh -i")
@@ -260,7 +262,11 @@
 (global-set-key (kbd "C-c y")  'helm-c-yas-complete)
 
 (use 'geiser)
-(setq geiser-racket-binary "/Applications/Racket v6.3/bin/racket")
+(if (win?)
+    (setq geiser-racket-binary "Racket.exe"))
+(if (mac?)
+    (setq geiser-racket-binary "/Applications/Racket v6.3/bin/racket"))
+
 (setq geiser-active-implementations '(racket))
 (setq geiser-repl-read-only-prompt-p nil)
 
@@ -318,10 +324,18 @@
   (enable-paredit-mode)
   (define-key scheme-mode-map "\C-h" 'paredit-backward-delete)))
 
-(require 'tramp)
-(setq-default tramp-default-method "sshx")
-(setq-default tramp-persistency-file-name nil)
-
 (use 'web-mode)
 (add-to-list 'auto-mode-alist '("\\.ctp$" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html?$" . web-mode))
+
+;http://d.hatena.ne.jp/khiker/20110508/gnus
+;;; Gmail IMAP
+(setq gnus-select-method '(nnimap "gmail"
+                           (nnimap-address "imap.gmail.com")
+                           (nnimap-server-port 993)
+                           (nnimap-stream ssl)))
+ ;;; Gmail SMTP
+(setq message-send-mail-function 'smtpmail-send-it
+      smtpmail-default-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-server "smtp.gmail.com"
+      smtpmail-smtp-service 587)
