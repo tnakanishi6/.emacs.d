@@ -27,6 +27,13 @@
                   (set-fontset-font  nil 'japanese-jisx0208  (font-spec :family "Hiragino Kaku Gothic ProN")) ;; font 設定
                   (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9))))) ;; font 設定
 
+;; local lisp
+(add-to-list 'load-path "~/.emacs.d/lisp")
+(require 'auto-rsync)
+(auto-rsync-mode t)
+(add-to-list 'load-path "~/.emacs.d/private")
+(load "settings")
+
 ;; tag
 (setq tags-file-name "~/.emacs.d/TAGS")
 
@@ -50,12 +57,6 @@
   (let ((thiswin (selected-window)) (nextbuf (window-buffer (next-window))))
     (set-window-buffer (next-window) (window-buffer))
     (set-window-buffer thiswin nextbuf)))
-
-(defun use (package)
-  (when (not (package-installed-p package))
-    (when (not package-archive-contents)
-      (package-refresh-contents))
-    (package-install package)))
 
 (defun w32-isearch-update ()
   (interactive)
@@ -173,164 +174,202 @@
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (package-initialize)
 
-(use 'use-package)
+(when (not (package-installed-p 'use-package))
+  (package-refresh-contents)
+  (package-install 'use-package))
 
 (use-package material-theme
   :ensure t
   :config (load-theme 'material t))
 
-(use 'auto-complete)
-(require 'auto-complete-config)
-(global-auto-complete-mode t)
-(setq ac-delay 0.1)
-(setq ac-auto-show-menu 0.1)
-(setq ac-auto-start 2)
-(setq ac-use-menu-map t)
-(setq ac-dwim t)
-(setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet))
-(add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")
-(ac-config-default)
+(use-package auto-complete
+  :ensure t
+  :config (progn (require 'auto-complete-config)
+                 (global-auto-complete-mode t)
+                 (setq ac-delay 0.1)
+                 (setq ac-auto-show-menu 0.1)
+                 (setq ac-auto-start 2)
+                 (setq ac-use-menu-map t)
+                 (setq ac-dwim t)
+                 (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet))
+                 (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")
+                 (ac-config-default)))
 
-(use 'smartparens)
-(smartparens-global-mode t)
-(sp-local-pair 'emacs-lisp-mode "'" nil :actions nil)
-(sp-local-pair 'scheme-mode "'" nil :actions nil)
+(use-package smartparens
+  :ensure t
+  :config (progn (smartparens-global-mode t)
+                 (sp-local-pair 'emacs-lisp-mode "'" nil :actions nil)
+                 (sp-local-pair 'scheme-mode "'" nil :actions nil)))
 
-(use 'anzu)
-(global-anzu-mode +1)
+(use-package anzu
+  :ensure t
+  :config (global-anzu-mode +1))
 
-(use 'volatile-highlights)
-(require 'volatile-highlights)
-(volatile-highlights-mode t)
+(use-package volatile-highlights
+  :ensure t
+  :config (volatile-highlights-mode t))
 
-(use 'php-mode)
-(add-hook 'php-mode-hook      (lambda () (setq indent-tabs-mode t)))
+(use-package php-mode
+  :ensure t
+  :defer t
+  :config (add-hook 'php-mode-hook (lambda () (setq indent-tabs-mode t))))
 
-(use 'undo-tree)
-(global-undo-tree-mode t)
-(global-set-key (kbd "M-/") 'undo-tree-redo)
+(use-package undo-tree
+  :ensure t
+  :config (global-undo-tree-mode t))
 
-(use 'color-moccur)
-(setq moccur-split-word t)
-(global-set-key (kbd "M-o") 'occur-by-moccur)
+(use-package color-moccur
+  :ensure t
+  :defer t
+  :config (setq moccur-split-word t)
+  :bind (("M-o" . occur-by-moccur )))
 
-(use 'moccur-edit)
+(use-package moccur-edit
+  :ensure t
+  :defer t)
 
-(use 'esup)
+(use-package esup
+  :ensure t
+  :defer t)
 
-(use 'sequential-command)
-(require 'sequential-command)
-(define-sequential-command seq-home
-  beginning-of-line beginning-of-buffer seq-return)
-(define-sequential-command seq-end
-  end-of-line end-of-buffer seq-return)
-(global-set-key "\C-a" 'seq-home)
-(global-set-key "\C-e" 'seq-end)
+(use-package sequential-command
+  :ensure t
+  :defer t
+  :config (progn (require 'sequential-command)
+                 (define-sequential-command seq-home
+                   beginning-of-line beginning-of-buffer seq-return)
+                 (define-sequential-command seq-end
+                   end-of-line end-of-buffer seq-return))
+  :bind (("\C-a" . seq-home)
+         ("\C-e" . seq-end)))
 
-(use 'yasnippet)
-(setq yas-snippet-dirs
-        (list "~/.emacs.d/snippets"))
-(yas-global-mode 1)
-;(define-key yas-keymap (kbd "C-n") 'yas-next-field-or-maybe-expand)
-;(define-key yas-keymap (kbd "C-p") 'yas-prev)
-;(custom-set-variables '(yas-trigger-key "TAB"))
-(define-key yas-minor-mode-map (kbd "C-x i i") 'yas-insert-snippet) ;; 既存スニペットを挿入する
-(define-key yas-minor-mode-map (kbd "C-x i n") 'yas-new-snippet) ;; 新規スニペットを作成するバッファを用意する
-(define-key yas-minor-mode-map (kbd "C-x i v") 'yas-visit-snippet-file)
+(use-package yasnippet
+  :ensure t
+  :init
+  ;; (bind-keys :map yas-keymap
+  ;;            ("C-n" . yas-next-field-or-maybe-expand)
+  ;;            ("C-p" . yas-prev))
+  :config (progn (yas-global-mode 1)
+                 (setq yas-snippet-dirs
+                       (list "~/.emacs.d/snippets")))
+  ;; :bind (("C-x i i" . yas-insert-snippet)
+  ;;        ("C-x u n" . yas-new-snippet)
+  ;;        ("C-x i v" . yas-visit-snippet-file))
+  )
 
-(use 'ace-jump-mode)
-(global-set-key (kbd "C-x SPC") 'ace-jump-mode)
-(global-set-key (kbd "C-c SPC") 'ace-jump-mode)
+(use-package ace-jump-mode
+  :ensure t
+  :defer t
+  :bind (("C-x SPC" . ace-jump-mode)
+         ("C-c SPC" . ace-jump-mode)))
 
-(use 'helm)
-(helm-mode +1)
-(global-set-key (kbd "M-x") 'helm-M-x)
-(global-set-key (kbd "C-x C-f") 'helm-find-files)
-(global-set-key (kbd "C-x b") 'helm-mini)
-(global-set-key (kbd "C-c o") 'helm-occur)
-(global-set-key (kbd "C-c i") 'helm-imenu)
-(global-set-key (kbd "C-x C-r") 'helm-recentf)
-(define-key helm-find-files-map "\C-f" 'helm-execute-persistent-action)
-(define-key helm-find-files-map "\C-k" 'kill-line)
-(define-key helm-find-files-map "\C-h" 'delete-backward-char)
-(define-key helm-find-files-map "\C-b" 'helm-find-files-up-one-level)
-(define-key helm-read-file-map "\C-f" 'helm-execute-persistent-action)
-(define-key helm-read-file-map "\C-k" 'kill-line)
-(define-key helm-read-file-map "\C-b" 'helm-find-files-up-one-level)
-(define-key helm-find-files-map "\C-k" 'kill-line)
-(global-set-key (kbd "M-.") 'helm-etags-select)
-(global-set-key (kbd "M-y") 'helm-show-kill-ring)
+(use-package helm
+  :ensure t
+  :config (progn (helm-mode +1)
+                 (global-set-key (kbd "M-x") 'helm-M-x)
+                 (global-set-key (kbd "C-x C-f") 'helm-find-files)
+                 (global-set-key (kbd "C-x b") 'helm-mini)
+                 (global-set-key (kbd "C-c o") 'helm-occur)
+                 (global-set-key (kbd "C-c i") 'helm-imenu)
+                 (global-set-key (kbd "C-x C-r") 'helm-recentf)
+                 (define-key helm-find-files-map "\C-f" 'helm-execute-persistent-action)
+                 (define-key helm-find-files-map "\C-k" 'kill-line)
+                 (define-key helm-find-files-map "\C-h" 'delete-backward-char)
+                 (define-key helm-find-files-map "\C-b" 'helm-find-files-up-one-level)
+                 (define-key helm-read-file-map "\C-f" 'helm-execute-persistent-action)
+                 (define-key helm-read-file-map "\C-k" 'kill-line)
+                 (define-key helm-read-file-map "\C-b" 'helm-find-files-up-one-level)
+                 (define-key helm-find-files-map "\C-k" 'kill-line)
+                 (global-set-key (kbd "M-.") 'helm-etags-select)
+                 (global-set-key (kbd "M-y") 'helm-show-kill-ring)))
 
 
-(use 'helm-c-yasnippet)
-(global-set-key (kbd "C-c y")  'helm-c-yas-complete)
+(use-package geiser
+  :ensure t
+  :defer t
+  :config (progn (if (win?)
+                     (setq geiser-racket-binary "Racket.exe"))
+                 (if (mac?)
+                     (setq geiser-racket-binary "/Applications/Racket v6.3/bin/racket"))
+                 (setq geiser-active-implementations '(racket))
+                 (setq geiser-repl-read-only-prompt-p nil)))
 
-(use 'geiser)
-(if (win?)
-    (setq geiser-racket-binary "Racket.exe"))
-(if (mac?)
-    (setq geiser-racket-binary "/Applications/Racket v6.3/bin/racket"))
+(use-package rainbow-delimiters
+  :ensure t
+  :config (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
 
-(setq geiser-active-implementations '(racket))
-(setq geiser-repl-read-only-prompt-p nil)
+(use-package multiple-cursors
+  :ensure t
+  :defer t)
 
-(use 'rainbow-delimiters)
-(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+(use-package smartrep
+  :ensure t 
+  :config (progn (declare-function smartrep-define-key "smartrep")
+                 (global-unset-key "\C-t")
+                 (smartrep-define-key global-map "C-t"
+                   '(("C-t"      . 'mc/mark-next-like-this)
+                     ("n"        . 'mc/mark-next-like-this)
+                     ("p"        . 'mc/mark-previous-like-this)
+                     ("m"        . 'mc/mark-more-like-this-extended)
+                     ("u"        . 'mc/unmark-next-like-this)
+                     ("U"        . 'mc/unmark-previous-like-this)
+                     ("s"        . 'mc/skip-to-next-like-this)
+                     ("S"        . 'mc/skip-to-previous-like-this)
+                     ("*"        . 'mc/mark-all-like-this)
+                     ("d"        . 'mc/mark-all-like-this-dwim)
+                     ("i"        . 'mc/insert-numbers)
+                     ("o"        . 'mc/sort-regions)
+                     ("O"        . 'mc/reverse-regions)))))
 
-(use 'multiple-cursors)
-(use 'smartrep)
-(require 'smartrep)
-(declare-function smartrep-define-key "smartrep")
-(global-set-key (kbd "C-M-c") 'mc/edit-lines)
-(global-set-key (kbd "C-M-r") 'mc/mark-all-in-region)
-(global-unset-key "\C-t")
-(smartrep-define-key global-map "C-t"
-  '(("C-t"      . 'mc/mark-next-like-this)
-    ("n"        . 'mc/mark-next-like-this)
-    ("p"        . 'mc/mark-previous-like-this)
-    ("m"        . 'mc/mark-more-like-this-extended)
-    ("u"        . 'mc/unmark-next-like-this)
-    ("U"        . 'mc/unmark-previous-like-this)
-    ("s"        . 'mc/skip-to-next-like-this)
-    ("S"        . 'mc/skip-to-previous-like-this)
-    ("*"        . 'mc/mark-all-like-this)
-    ("d"        . 'mc/mark-all-like-this-dwim)
-    ("i"        . 'mc/insert-numbers)
-    ("o"        . 'mc/sort-regions)
-    ("O"        . 'mc/reverse-regions)))
 
-(use 'git-gutter)
-(global-git-gutter-mode t)
-(setq git-gutter:window-width 2)
-(set-face-foreground 'git-gutter:added  "green")
-(set-face-foreground 'git-gutter:deleted  "yellow")
-(set-face-background 'git-gutter:modified "magenta")
-(setq git-gutter:update-hooks '(after-save-hook after-revert-hook))
-(global-set-key (kbd "C-x n")  'git-gutter:next-diff)
-(global-set-key (kbd "C-x p")  'git-gutter:previous-diff)
+(use-package git-gutter
+  :ensure t
+  :config (progn (global-git-gutter-mode t)
+                 (setq git-gutter:window-width 2)
+                 (set-face-foreground 'git-gutter:added  "green")
+                 (set-face-foreground 'git-gutter:deleted  "yellow")
+                 (set-face-background 'git-gutter:modified "magenta")
+                 (setq git-gutter:update-hooks '(after-save-hook after-revert-hook)))
+  :bind (("C-x n" . git-gutter:next-diff)
+         ("C-x p" . git-gutter:previous-diff)))
 
-(use 's)
-(require 's)
+(use-package s
+  :ensure t)
 
-(use 'visual-regexp-steroids)
-(use 'pcre2el)
-(setq vr/engine 'pcre2el) 
-(global-set-key (kbd "C-M-%") 'vr/query-replace)
-(global-set-key (kbd "C-c m") 'vr/mc-mark)
-(global-set-key (kbd "C-M-r") 'vr/isearch-backward)
-(global-set-key (kbd "C-M-s") 'vr/isearch-forward)
+(use-package pcre2el
+  :ensure t)
 
-(use 'paredit);http://www.daregada.sakuraweb.com/paredit_tutorial_ja.html
-(add-hook 'emacs-lisp-mode-hook (lambda ()
-  (enable-paredit-mode)
-  (define-key emacs-lisp-mode-map "\C-h" 'paredit-backward-delete)))
-(add-hook 'scheme-mode-hook (lambda ()
-  (enable-paredit-mode)
-  (define-key scheme-mode-map "\C-h" 'paredit-backward-delete)))
+(use-package visual-regexp-steroids
+  :ensure t
+  :defer t
+  :config (setq vr/engine 'pcre2el) 
+  :bind (("C-M-%" . vr/query-replace)
+         ("C-c m" . vr/mc-mark)
+         ("C-M-r" . vr/isearch-backward)
+         ("C-M-s" . vr/isearch-forward)))
 
-(use 'web-mode)
-(add-to-list 'auto-mode-alist '("\\.ctp$" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.html?$" . web-mode))
+(use-package paredit
+  :ensure t
+  :defer t
+  :init
+  (progn
+    (add-hook 'emacs-lisp-mode-hook
+              (lambda ()
+                (enable-paredit-mode)
+                (define-key emacs-lisp-mode-map "\C-h" 'paredit-backward-delete)))
+    (add-hook 'scheme-mode-hook
+              (lambda ()
+                (enable-paredit-mode)
+                (define-key scheme-mode-map "\C-h" 'paredit-backward-delete)))))
+
+(use-package web-mode
+  :mode (("\\.ctp" . web-mode)
+         ("\\.html" . web-mode)))
+
+(use-package magit
+  :ensure t
+  :bind (("C-x g" . magit-status)
+         ("C-x M-g" . magit-dispatch-popup)))
 
 ;http://d.hatena.ne.jp/khiker/20110508/gnus
 ;;; Gmail IMAP
@@ -344,7 +383,4 @@
       smtpmail-smtp-server "smtp.gmail.com"
       smtpmail-smtp-service 587)
 
-(use-package magit
-  :ensure t
-  :bind (("C-x g" . magit-status)
-         ("C-x M-g" . magit-dispatch-popup)))
+
