@@ -173,8 +173,11 @@
 (add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (package-initialize)
 
-(use 'material-theme)
-(load-theme 'material t)
+(use 'use-package)
+
+(use-package material-theme
+  :ensure t
+  :config (load-theme 'material t))
 
 (use 'auto-complete)
 (require 'auto-complete-config)
@@ -190,6 +193,8 @@
 
 (use 'smartparens)
 (smartparens-global-mode t)
+(sp-local-pair 'emacs-lisp-mode "'" nil :actions nil)
+(sp-local-pair 'scheme-mode "'" nil :actions nil)
 
 (use 'anzu)
 (global-anzu-mode +1)
@@ -223,9 +228,8 @@
 (global-set-key "\C-e" 'seq-end)
 
 (use 'yasnippet)
-(let ((install-version (aref (cdr (assoc 'yasnippet package-alist)) 0)))
-  (setq yas-snippet-dirs
-        (list "~/.emacs.d/snippets")))
+(setq yas-snippet-dirs
+        (list "~/.emacs.d/snippets"))
 (yas-global-mode 1)
 ;(define-key yas-keymap (kbd "C-n") 'yas-next-field-or-maybe-expand)
 ;(define-key yas-keymap (kbd "C-p") 'yas-prev)
@@ -339,3 +343,8 @@
       smtpmail-default-smtp-server "smtp.gmail.com"
       smtpmail-smtp-server "smtp.gmail.com"
       smtpmail-smtp-service 587)
+
+(use-package magit
+  :ensure t
+  :bind (("C-x g" . magit-status)
+         ("C-x M-g" . magit-dispatch-popup)))
