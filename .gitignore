@@ -5,4 +5,5 @@ tramp
 backups/*
 elpa/*
 auto-save-list/*
+private/*
 !empty
