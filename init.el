@@ -190,6 +190,8 @@
 
 (use 'smartparens)
 (smartparens-global-mode t)
+(sp-local-pair 'emacs-lisp-mode "'" nil :actions nil)
+(sp-local-pair 'scheme-mode "'" nil :actions nil)
 
 (use 'anzu)
 (global-anzu-mode +1)
