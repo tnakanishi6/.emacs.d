@@ -329,9 +329,10 @@
                  (set-face-foreground 'git-gutter:added  "green")
                  (set-face-foreground 'git-gutter:deleted  "yellow")
                  (set-face-background 'git-gutter:modified "magenta")
-                 (setq git-gutter:update-hooks '(after-save-hook after-revert-hook)))
-  :bind (("C-x n" . git-gutter:next-diff)
-         ("C-x p" . git-gutter:previous-diff)))
+                 (setq git-gutter:update-hooks '(after-save-hook after-revert-hook))
+                 (smartrep-define-key
+                     global-map  "C-x" '(("p" . 'git-gutter:previous-hunk)
+                                         ("n" . 'git-gutter:next-hunk)))))
 
 (use-package s
   :ensure t)
@@ -370,6 +371,24 @@
   :ensure t
   :bind (("C-x g" . magit-status)
          ("C-x M-g" . magit-dispatch-popup)))
+
+(use-package org-present
+  :ensure t
+  :defer t
+  :config (progn (add-hook 'org-present-mode-hook
+                           (lambda ()
+                             (org-present-big)
+                             (org-display-inline-images)
+                             (org-present-hide-cursor)
+                             (org-present-read-only)))
+                 (add-hook 'org-present-mode-quit-hook
+                           (lambda ()
+                             (org-present-small)
+                             (org-remove-inline-images)
+                             (org-present-show-cursor)
+                             (org-present-read-write)))
+                 (setq org-present-text-scale 5)
+                 (define-key org-present-mode-keymap (kbd "C-c C-;") 'org-present-big)))
 
 ;http://d.hatena.ne.jp/khiker/20110508/gnus
 ;;; Gmail IMAP
