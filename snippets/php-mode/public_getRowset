@@ -1,0 +1,13 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : public getRowset... ()
+#expand-env: ((yas/indent-line 'fixed) (yas/wrap-around-region 'nil))
+# --
+	private $__$1Rowset = null;
+
+	private function __get$1Rowset(){
+		if(is_null($this->__$1Rowset)){
+			$this->__$1Rowset = MyApp_DAOShare_$1::getInstance()->$2($this->getId());
+		}
+		return $this->__$1Rowset;
+	}
+$0

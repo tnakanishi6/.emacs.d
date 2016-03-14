@@ -6,7 +6,7 @@
 
 	private function __get$1Row(){
 		if(is_null($this->__$1Row)){
-			$this->__$1Row = $3$1::getInstance()->findById($this->$2);
+			$this->__$1Row = MyApp_DAOShare_$1::getInstance()->findById($this->$2);
 		}
 		return $this->__$1Row;
 	}

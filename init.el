@@ -26,13 +26,12 @@
                   (set-face-attribute 'default nil :family "Menlo"  :height 130) ;; font 設定
                   (set-fontset-font  nil 'japanese-jisx0208  (font-spec :family "Hiragino Kaku Gothic ProN")) ;; font 設定
                   (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9))))) ;; font 設定
-
 ;; local lisp
 (add-to-list 'load-path "~/.emacs.d/lisp")
 (require 'auto-rsync)
 (auto-rsync-mode t)
 (add-to-list 'load-path "~/.emacs.d/private")
-(load "settings")
+;(load "settings")
 
 ;; tag
 (setq tags-file-name "~/.emacs.d/TAGS")
@@ -365,7 +364,9 @@
 
 (use-package web-mode
   :mode (("\\.ctp" . web-mode)
-         ("\\.html" . web-mode)))
+         ("\\.html" . web-mode))
+  :init
+  (add-hook 'web-mode-hook  (lambda () (setq-default tab-width 4 indent-tabs-mode t))))
 
 (use-package magit
   :ensure t
@@ -389,6 +390,14 @@
                              (org-present-read-write)))
                  (setq org-present-text-scale 5)
                  (define-key org-present-mode-keymap (kbd "C-c C-;") 'org-present-big)))
+
+(use-package scss-mode
+  :ensure t
+  :defer t
+  :init
+  (add-hook 'scss-mode-hook  '(lambda () (set (make-local-variable 'scss-compile-at-save) nil))))
+
+
 
 ;http://d.hatena.ne.jp/khiker/20110508/gnus
 ;;; Gmail IMAP
