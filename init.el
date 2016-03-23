@@ -1,8 +1,6 @@
 ;; initial settings
 (require 'cl)
 (setq initial-major-mode 'text-mode)
-(defun toggle-input-method nil)
-
 
 ;; enviroment settings
 (defun mac? ()    (string-match "apple-darwin" system-configuration))
@@ -26,13 +24,6 @@
                   (set-face-attribute 'default nil :family "Menlo"  :height 130) ;; font 設定
                   (set-fontset-font  nil 'japanese-jisx0208  (font-spec :family "Hiragino Kaku Gothic ProN")) ;; font 設定
                   (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9))))) ;; font 設定
-;; local lisp
-(add-to-list 'load-path "~/.emacs.d/lisp")
-(require 'auto-rsync)
-(auto-rsync-mode t)
-(add-to-list 'load-path "~/.emacs.d/private")
-;(load "settings")
-
 ;; tag
 (setq tags-file-name "~/.emacs.d/TAGS")
 
@@ -95,10 +86,6 @@
 (progn  (cua-mode t)
         (setq cua-enable-cua-keys nil)) ;; rectangle select
 (global-hl-line-mode t)
-;; language settings
-(progn (set-language-environment "Japanese")
-       (prefer-coding-system 'utf-8)
-       (set-default-coding-systems 'utf-8))
 
 ;; eol settings
 (progn (setq eol-mnemonic-unix "(Unix)")
@@ -121,7 +108,6 @@
        (define-key windmove-map "1" 'delete-other-windows)
        (define-key windmove-map "2" 'split-window-vertically)
        (define-key windmove-map "3" 'split-window-horizontally)) ;; move split window
-
 
 ;; dired
 (require 'wdired)
@@ -271,6 +257,7 @@
                  (global-set-key (kbd "C-c o") 'helm-occur)
                  (global-set-key (kbd "C-c i") 'helm-imenu)
                  (global-set-key (kbd "C-x C-r") 'helm-recentf)
+                 (global-set-key (kbd "C-x r l") 'helm-bookmarks)
                  (define-key helm-find-files-map "\C-f" 'helm-execute-persistent-action)
                  (define-key helm-find-files-map "\C-k" 'kill-line)
                  (define-key helm-find-files-map "\C-h" 'delete-backward-char)
@@ -363,6 +350,7 @@
                 (define-key scheme-mode-map "\C-h" 'paredit-backward-delete)))))
 
 (use-package web-mode
+  :ensure t
   :mode (("\\.ctp" . web-mode)
          ("\\.html" . web-mode))
   :init
@@ -397,7 +385,11 @@
   :init
   (add-hook 'scss-mode-hook  '(lambda () (set (make-local-variable 'scss-compile-at-save) nil))))
 
-
+(use-package flycheck
+  :ensure t
+  :init
+  (progn (add-hook 'php-mode-hook 'flycheck-mode)
+         (add-hook 'web-mode-hook 'flycheck-mode)))
 
 ;http://d.hatena.ne.jp/khiker/20110508/gnus
 ;;; Gmail IMAP
@@ -410,5 +402,33 @@
       smtpmail-default-smtp-server "smtp.gmail.com"
       smtpmail-smtp-server "smtp.gmail.com"
       smtpmail-smtp-service 587)
+
+;; language settings
+(when (win?)
+    (progn (set-language-environment "Japanese")
+           (prefer-coding-system 'utf-8)
+           (set-default-coding-systems 'utf-8)))
+(when (linux?)
+    (progn
+      (require 'mozc)
+      (set-language-environment "Japanese")
+      (setq default-input-method "japanese-mozc")
+      (global-set-key (kbd "<zenkaku-hankaku>") 'toggle-input-method)
+      (prefer-coding-system 'utf-8)))
+
+(when (linux?)
+  (defun add-keys-to-ace-jump-mode (prefix c &optional mode)
+  (define-key global-map
+    (read-kbd-macro (concat prefix (string c)))
+    `(lambda ()
+     (interactive)
+     (funcall (if (eq ',mode 'word)
+            #'ace-jump-word-mode
+          #'ace-jump-char-mode) ,c))))
+
+  (loop for c from ?0 to ?9 do (add-keys-to-ace-jump-mode "H-" c))
+  (loop for c from ?a to ?z do (add-keys-to-ace-jump-mode "H-" c))
+  (loop for c from ?0 to ?9 do (add-keys-to-ace-jump-mode "H-M-" c 'word))
+  (loop for c from ?a to ?z do (add-keys-to-ace-jump-mode "H-M-" c 'word)))
 
 
