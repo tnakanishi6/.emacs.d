@@ -1,8 +1,10 @@
 ac-comphist.dat
 bookmarks
+recentf
 .mc-lists.el
 tramp
 backups/*
+eshell/*
 elpa/*
 auto-save-list/*
 private/*
