@@ -1,6 +1,6 @@
 ;; initial settings
 (require 'cl)
-(setq initial-major-mode 'text-mode)
+(defun suspend-frame () nil) 
 
 ;; enviroment settings
 (defun mac? ()    (string-match "apple-darwin" system-configuration))
@@ -24,8 +24,6 @@
                   (set-face-attribute 'default nil :family "Menlo"  :height 130) ;; font 設定
                   (set-fontset-font  nil 'japanese-jisx0208  (font-spec :family "Hiragino Kaku Gothic ProN")) ;; font 設定
                   (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9))))) ;; font 設定
-;; tag
-(setq tags-file-name "~/.emacs.d/TAGS")
 
 ;; bookmark settings
 (setq bookmark-save-flag 1)
@@ -73,7 +71,7 @@
 (setq inhibit-startup-message t) ;; hide wellcome page
 (setq-default line-spacing 7) ;; line-spacing
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
-(set-frame-parameter nil 'alpha 95) ;; window-transparent
+(set-frame-parameter nil 'alpha 75) ;; window-transparent
 (setq-default tab-width 2 indent-tabs-mode nil) ;;default tab-mode
 (setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines
 (setq visible-bell t) (setq ring-bell-function 'ignore);; turn off beep
@@ -156,7 +154,6 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"));; MELPAを追加
 (add-to-list 'package-archives  '("marmalade" . "http://marmalade-repo.org/packages/"));; Marmaladeを追加
-(add-to-list 'package-archives '("org" . "http://orgmode.org/elpa/"))
 (package-initialize)
 
 (when (not (package-installed-p 'use-package))
@@ -269,16 +266,28 @@
                  (global-set-key (kbd "M-.") 'helm-etags-select)
                  (global-set-key (kbd "M-y") 'helm-show-kill-ring)))
 
-
-(use-package geiser
+(use-package helm-swoop
   :ensure t
-  :defer t
-  :config (progn (if (win?)
-                     (setq geiser-racket-binary "Racket.exe"))
-                 (if (mac?)
-                     (setq geiser-racket-binary "/Applications/Racket v6.3/bin/racket"))
-                 (setq geiser-active-implementations '(racket))
-                 (setq geiser-repl-read-only-prompt-p nil)))
+  :config (progn (global-set-key (kbd "M-i") 'helm-swoop)
+                 (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
+                 (global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
+                 (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
+                 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
+                 (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
+
+                 (setq helm-multi-swoop-edit-save t) ;; Save buffer when helm-multi-swoop-edit complete
+                 (setq helm-swoop-split-with-multiple-windows nil) ;; 値がtの場合はウィンドウ内に分割、nilなら別のウィンドウを使用
+                 (setq helm-swoop-split-direction 'split-window-vertically))) ;; ウィンドウ分割方向 'split-window-vertically or 'split-window-horizontally))
+
+;; (use-package geiser
+;;   :ensure t
+;;   :defer t
+;;   :config (progn (if (win?)
+;;                      (setq geiser-racket-binary "Racket.exe"))
+;;                  (if (mac?)
+;;                      (setq geiser-racket-binary "/Applications/Racket v6.3/bin/racket"))
+;;                  (setq geiser-active-implementations '(racket))
+;;                  (setq geiser-repl-read-only-prompt-p nil)))
 
 (use-package rainbow-delimiters
   :ensure t
@@ -391,6 +400,11 @@
   (progn (add-hook 'php-mode-hook 'flycheck-mode)
          (add-hook 'web-mode-hook 'flycheck-mode)))
 
+(setq org-capture-templates
+      '(("c" "Code" entry (file+headline "~/org/code.org" "Codes")
+         "** %?\n %U\n %i\n %a\n %i\n")))
+(global-set-key "\C-cc" 'org-capture)
+
 ;http://d.hatena.ne.jp/khiker/20110508/gnus
 ;;; Gmail IMAP
 (setq gnus-select-method '(nnimap "gmail"
@@ -416,19 +430,21 @@
       (global-set-key (kbd "<zenkaku-hankaku>") 'toggle-input-method)
       (prefer-coding-system 'utf-8)))
 
-(when (linux?)
-  (defun add-keys-to-ace-jump-mode (prefix c &optional mode)
-  (define-key global-map
-    (read-kbd-macro (concat prefix (string c)))
-    `(lambda ()
-     (interactive)
-     (funcall (if (eq ',mode 'word)
-            #'ace-jump-word-mode
-          #'ace-jump-char-mode) ,c))))
 
-  (loop for c from ?0 to ?9 do (add-keys-to-ace-jump-mode "H-" c))
-  (loop for c from ?a to ?z do (add-keys-to-ace-jump-mode "H-" c))
-  (loop for c from ?0 to ?9 do (add-keys-to-ace-jump-mode "H-M-" c 'word))
-  (loop for c from ?a to ?z do (add-keys-to-ace-jump-mode "H-M-" c 'word)))
-
-
+(defun align-regexp-repeated (start stop regexp)
+  (interactive "r\nsAlign regexp: ")
+  (let ((spacing 1)
+        (old-buffer-size (buffer-size)))
+    ;; If our align regexp is just spaces, then we don't need any
+    ;; extra spacing.
+    (when (string-match regexp " ")
+      (setq spacing 0))
+	(align-regexp start stop
+				  ;; add space at beginning of regexp
+				  (concat "\\([[:space:]]*\\)" regexp)
+				  1 spacing t)	
+	(while (read-string "Repeat:")
+	  (progn 	(align-regexp start stop
+							  ;; add space at beginning of regexp
+							  (concat "\\([[:space:]]*\\)" regexp)
+							  1 spacing t)))))
