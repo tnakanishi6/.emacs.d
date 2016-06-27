@@ -168,14 +168,16 @@
   :ensure t
   :config (progn (require 'auto-complete-config)
                  (global-auto-complete-mode t)
+                 (ac-config-default)
                  (setq ac-delay 0.1)
                  (setq ac-auto-show-menu 0.1)
                  (setq ac-auto-start 2)
                  (setq ac-use-menu-map t)
+                 (setq ac-use-fuzzy t)
+                 (setq ac-use-comphist t) 
                  (setq ac-dwim t)
                  (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet))
-                 (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")
-                 (ac-config-default)))
+                 (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")))
 
 (use-package smartparens
   :ensure t
@@ -263,7 +265,15 @@
                  (define-key helm-read-file-map "\C-k" 'kill-line)
                  (define-key helm-read-file-map "\C-b" 'helm-find-files-up-one-level)
                  (define-key helm-find-files-map "\C-k" 'kill-line)
-                 (global-set-key (kbd "M-.") 'helm-etags-select)
+                 
+                 (setq helm-mode-fuzzy-match t)
+                 (setq helm-imenu-fuzzy-match t)
+                 (setq helm-recentf-fuzzy-match t)
+                 (setq helm-buffers-fuzzy-matching t)
+                 (setq helm-M-x-fuzzy-match t)
+                 (setq helm-mode-fuzzy-match t)
+                 (setq helm-completion-in-region-fuzzy-match t)
+                 (setq helm-candidate-number-limit 25)
                  (global-set-key (kbd "M-y") 'helm-show-kill-ring)))
 
 (use-package helm-swoop
@@ -274,7 +284,7 @@
                  (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
                  (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
                  (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
-
+                 (setq helm-swoop-use-fuzzy-match t)
                  (setq helm-multi-swoop-edit-save t) ;; Save buffer when helm-multi-swoop-edit complete
                  (setq helm-swoop-split-with-multiple-windows nil) ;; 値がtの場合はウィンドウ内に分割、nilなら別のウィンドウを使用
                  (setq helm-swoop-split-direction 'split-window-vertically))) ;; ウィンドウ分割方向 'split-window-vertically or 'split-window-horizontally))
@@ -349,10 +359,10 @@
   :defer t
   :init
   (progn
-    (add-hook 'emacs-lisp-mode-hook
-              (lambda ()
-                (enable-paredit-mode)
-                (define-key emacs-lisp-mode-map "\C-h" 'paredit-backward-delete)))
+    ;; (add-hook 'emacs-lisp-mode-hook
+    ;;           (lambda ()
+    ;;             (enable-paredit-mode)
+    ;;             (define-key emacs-lisp-mode-map "\C-h" 'paredit-backward-delete)))
     (add-hook 'scheme-mode-hook
               (lambda ()
                 (enable-paredit-mode)
@@ -448,3 +458,4 @@
 							  ;; add space at beginning of regexp
 							  (concat "\\([[:space:]]*\\)" regexp)
 							  1 spacing t)))))
+
