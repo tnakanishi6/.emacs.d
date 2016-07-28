@@ -71,8 +71,8 @@
 (setq inhibit-startup-message t) ;; hide wellcome page
 (setq-default line-spacing 7) ;; line-spacing
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
-(set-frame-parameter nil 'alpha 75) ;; window-transparent
-(setq-default tab-width 2 indent-tabs-mode nil) ;;default tab-mode
+(set-frame-parameter nil 'alpha 100) ;; window-transparent
+(setq-default tab-width 2 indent-tabs-mode t) ;;default tab-mode
 (setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines
 (setq visible-bell t) (setq ring-bell-function 'ignore);; turn off beep
 (setq kill-whole-line t) ;; allow kill-line
@@ -84,6 +84,9 @@
 (progn  (cua-mode t)
         (setq cua-enable-cua-keys nil)) ;; rectangle select
 (global-hl-line-mode t)
+(when (not window-system)
+  (custom-set-faces
+   '(hl-line ((t (:background "#000000"))))))
 
 ;; eol settings
 (progn (setq eol-mnemonic-unix "(Unix)")
@@ -140,10 +143,10 @@
          (set-face-attribute 'whitespace-trailing nil :foreground my/bg-color :foreground "GreenYellow" :underline t)
          (set-face-attribute 'whitespace-space nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
          (set-face-attribute 'whitespace-tab nil      :background my/bg-color :foreground "GreenYellow" :weight 'bold))
-  (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\ ?\ ]) (tab-mark ?\t [?\>?\.?\.?\.] [?\\ ?\t])))
+  (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
          (set-face-attribute 'whitespace-trailing nil :background "Black"  :foreground "GreenYellow" :underline t)
          (set-face-attribute 'whitespace-space nil    :background "GreenYellow" :foreground my/bg-color :weight 'bold)
-         (set-face-attribute 'whitespace-tab nil      :background "Black" :foreground "Blue" :underline t)))
+         (set-face-attribute 'whitespace-tab nil      :background "color-236" :foreground "Blue" :underline t)))
 (global-whitespace-mode 1)
 
 ;; org
@@ -162,7 +165,12 @@
 
 (use-package material-theme
   :ensure t
-  :config (load-theme 'material t))
+  :config (if window-system (load-theme 'material t)))
+
+(custom-set-variables
+ '(ac-etags-requires 2)
+(eval-after-load "etags" '(progn (ac-etags-setup)))
+(setq ac-etags-use-document t)
 
 (use-package auto-complete
   :ensure t
@@ -176,7 +184,7 @@
                  (setq ac-use-fuzzy t)
                  (setq ac-use-comphist t) 
                  (setq ac-dwim t)
-                 (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet))
+                 (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet ac-source-etags))
                  (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")))
 
 (use-package smartparens
@@ -193,10 +201,15 @@
   :ensure t
   :config (volatile-highlights-mode t))
 
+(use-package php-boris-minor-mode
+  :ensure t
+  :defer t
+	:config (setq php-scratch-boris-command "~/bin/boris"))
+
 (use-package php-mode
   :ensure t
   :defer t
-  :config (add-hook 'php-mode-hook (lambda () (setq indent-tabs-mode t))))
+  :config (progn (add-hook 'php-mode-hook 'php-boris-minor-mode)))
 
 (use-package undo-tree
   :ensure t
@@ -371,9 +384,7 @@
 (use-package web-mode
   :ensure t
   :mode (("\\.ctp" . web-mode)
-         ("\\.html" . web-mode))
-  :init
-  (add-hook 'web-mode-hook  (lambda () (setq-default tab-width 4 indent-tabs-mode t))))
+         ("\\.html" . web-mode)))
 
 (use-package magit
   :ensure t
@@ -409,6 +420,22 @@
   :init
   (progn (add-hook 'php-mode-hook 'flycheck-mode)
          (add-hook 'web-mode-hook 'flycheck-mode)))
+
+(use-package js2-mode
+  :ensure t
+  :defer t
+  :mode (("\.js$" . js2-mode))
+  :config (progn
+            (setq js2-cleanup-whitespace nil
+                  js2-mirror-mode nil
+                  js2-bounce-indent-flag nil
+                  js2-basic-offset 2
+                  indent-tabs-mode nil)))
+
+(use-package helm-hunks
+  :ensure t
+  :defer t
+  :commands helm-hunks)
 
 (setq org-capture-templates
       '(("c" "Code" entry (file+headline "~/org/code.org" "Codes")
@@ -449,13 +476,15 @@
     ;; extra spacing.
     (when (string-match regexp " ")
       (setq spacing 0))
-	(align-regexp start stop
-				  ;; add space at beginning of regexp
-				  (concat "\\([[:space:]]*\\)" regexp)
-				  1 spacing t)	
-	(while (read-string "Repeat:")
-	  (progn 	(align-regexp start stop
-							  ;; add space at beginning of regexp
-							  (concat "\\([[:space:]]*\\)" regexp)
-							  1 spacing t)))))
+    (align-regexp start stop
+                  ;; add space at beginning of regexp
+                  (concat "\\([[:space:]]*\\)" regexp)
+                  1 spacing t)    
+    (while (read-string "Repeat:")
+      (progn     (align-regexp start stop
+                              ;; add space at beginning of regexp
+                              (concat "\\([[:space:]]*\\)" regexp)
+                              1 spacing t)))))
+
+
 
