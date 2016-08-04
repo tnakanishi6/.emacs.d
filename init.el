@@ -71,8 +71,8 @@
 (setq inhibit-startup-message t) ;; hide wellcome page
 (setq-default line-spacing 7) ;; line-spacing
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
-(set-frame-parameter nil 'alpha 100) ;; window-transparent
-(setq-default tab-width 2 indent-tabs-mode t) ;;default tab-mode
+(set-frame-parameter nil 'alpha 90) ;; window-transparent
+(setq-default tab-width 4 indent-tabs-mode t) ;;default tab-mode
 (setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines
 (setq visible-bell t) (setq ring-bell-function 'ignore);; turn off beep
 (setq kill-whole-line t) ;; allow kill-line
@@ -167,10 +167,11 @@
   :ensure t
   :config (if window-system (load-theme 'material t)))
 
-(custom-set-variables
- '(ac-etags-requires 2)
-(eval-after-load "etags" '(progn (ac-etags-setup)))
-(setq ac-etags-use-document t)
+(setq initial-major-mode 'emacs-lisp-mode)
+;; (custom-set-variables
+;;  '(ac-etags-requires 2))
+;; (eval-after-load "etags" '(progn (ac-etags-setup)))
+;; (setq ac-etags-use-document t)
 
 (use-package auto-complete
   :ensure t
@@ -184,7 +185,7 @@
                  (setq ac-use-fuzzy t)
                  (setq ac-use-comphist t) 
                  (setq ac-dwim t)
-                 (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet ac-source-etags))
+                 (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet))
                  (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")))
 
 (use-package smartparens
@@ -380,6 +381,8 @@
               (lambda ()
                 (enable-paredit-mode)
                 (define-key scheme-mode-map "\C-h" 'paredit-backward-delete)))))
+
+(add-hook 'scheme-mode-hook (lambda () (setq indent-tabs-mode nil)))
 
 (use-package web-mode
   :ensure t
