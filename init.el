@@ -182,8 +182,7 @@
                  (setq ac-use-comphist t) 
                  (setq ac-dwim t)
                  (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet))
-                 (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20160310.2248/dict")))
-
+                 (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")))
 
 (use-package smartparens
   :ensure t
@@ -390,6 +389,8 @@
               (lambda ()
                 (enable-paredit-mode)
                 (define-key scheme-mode-map "\C-h" 'paredit-backward-delete)))))
+
+(add-hook 'scheme-mode-hook (lambda () (setq indent-tabs-mode nil)))
 
 (use-package web-mode
   :ensure t
