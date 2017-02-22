@@ -17,6 +17,7 @@
 (defgroup auto-rsync nil "Auto rsync")
 (defcustom auto-rsync-command "rsync" "rsync command path" :group 'auto-rsync)
 (defcustom auto-rsync-command-option "-avzq --delete --exclude='.git'" "rsync command option" :group 'auto-rsync)
+;;(defcustom auto-rsync-command-option "-avzq " "rsync command option" :group 'auto-rsync)
 
 
 ;;; TODO

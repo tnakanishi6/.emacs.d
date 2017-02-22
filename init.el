@@ -9,6 +9,7 @@
 (defun use-proxy? () nil)
 (defun http-proxy-host () "")
 (defun https-proxy-host () "")
+
 (if (use-proxy?)  (setq url-proxy-services (list (cons "http" (http-proxy-host)) (cons "https" (https-proxy-host)))))
 
 (if (win?) (progn (setq w32-lwindow-modifier 'super)
@@ -24,6 +25,8 @@
                   (set-face-attribute 'default nil :family "Menlo"  :height 130) ;; font 設定
                   (set-fontset-font  nil 'japanese-jisx0208  (font-spec :family "Hiragino Kaku Gothic ProN")) ;; font 設定
                   (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9))))) ;; font 設定
+(if (linux?) (progn
+               (set-face-attribute 'default nil :family "ゆたぽん（コーディング）Backsl" :height 130)))
 
 ;; bookmark settings
 (setq bookmark-save-flag 1)
@@ -61,6 +64,9 @@
   (interactive)  (message "%s" major-mode))
 
 ;; general settings
+(setq initial-scratch-message nil) ;; This buffer〜で始まる文章を表示しない
+(setq initial-major-mode 'emacs-lisp-mode) 
+
 (setq  gc-cons-threshold (* 10 gc-cons-threshold))
 (setq scroll-conservatively 35 scroll-margin 0 scroll-step 4) ;;scroll
 (setq process-kill-without-query t) ;; kill auto sub-process
@@ -71,8 +77,8 @@
 (setq inhibit-startup-message t) ;; hide wellcome page
 (setq-default line-spacing 7) ;; line-spacing
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
-(set-frame-parameter nil 'alpha 100) ;; window-transparent
-(setq-default tab-width 2 indent-tabs-mode t) ;;default tab-mode
+(set-frame-parameter nil 'alpha 92) ;; window-transparent
+(setq-default tab-width 4 indent-tabs-mode t) ;;default tab-mode
 (setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines
 (setq visible-bell t) (setq ring-bell-function 'ignore);; turn off beep
 (setq kill-whole-line t) ;; allow kill-line
@@ -101,10 +107,6 @@
 (global-set-key "\M-g" 'goto-line)
 (progn (define-prefix-command 'windmove-map)
        (global-set-key (kbd "C-c") 'windmove-map)
-       (define-key windmove-map "b" 'windmove-left)
-       (define-key windmove-map "n" 'windmove-down)
-       (define-key windmove-map "p" 'windmove-up)
-       (define-key windmove-map "f" 'windmove-right)
        (define-key windmove-map "0" 'delete-window)
        (define-key windmove-map "1" 'delete-other-windows)
        (define-key windmove-map "2" 'split-window-vertically)
@@ -167,11 +169,6 @@
   :ensure t
   :config (if window-system (load-theme 'material t)))
 
-(custom-set-variables
- '(ac-etags-requires 2)
-(eval-after-load "etags" '(progn (ac-etags-setup)))
-(setq ac-etags-use-document t)
-
 (use-package auto-complete
   :ensure t
   :config (progn (require 'auto-complete-config)
@@ -184,8 +181,9 @@
                  (setq ac-use-fuzzy t)
                  (setq ac-use-comphist t) 
                  (setq ac-dwim t)
-                 (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet ac-source-etags))
-                 (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")))
+                 (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet))
+                 (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20160310.2248/dict")))
+
 
 (use-package smartparens
   :ensure t
@@ -209,7 +207,9 @@
 (use-package php-mode
   :ensure t
   :defer t
-  :config (progn (add-hook 'php-mode-hook 'php-boris-minor-mode)))
+  :config (progn (add-hook 'php-mode-hook 'php-boris-minor-mode)
+                 (add-hook 'php-mode-hook (lambda ()
+                                            (setq indent-tabs-mode t)))))
 
 (use-package undo-tree
   :ensure t
@@ -260,13 +260,24 @@
   :bind (("C-x SPC" . ace-jump-mode)
          ("C-c SPC" . ace-jump-mode)))
 
+(require 'ace-jump-mode)
+(defun add-keys-to-ace-jump-mode (prefix c &optional mode)
+  (define-key global-map
+    (read-kbd-macro (concat prefix (string c)))
+    `(lambda ()
+       (interactive)
+       (funcall (if (eq ',mode 'word)
+                    #'ace-jump-word-mode
+                  #'ace-jump-char-mode) ,c))))
+
+(loop for c from ?! to ?~ do (add-keys-to-ace-jump-mode "H-" c 'word))
+
 (use-package helm
   :ensure t
   :config (progn (helm-mode +1)
                  (global-set-key (kbd "M-x") 'helm-M-x)
                  (global-set-key (kbd "C-x C-f") 'helm-find-files)
                  (global-set-key (kbd "C-x b") 'helm-mini)
-                 (global-set-key (kbd "C-c o") 'helm-occur)
                  (global-set-key (kbd "C-c i") 'helm-imenu)
                  (global-set-key (kbd "C-x C-r") 'helm-recentf)
                  (global-set-key (kbd "C-x r l") 'helm-bookmarks)
@@ -338,7 +349,6 @@
                      ("i"        . 'mc/insert-numbers)
                      ("o"        . 'mc/sort-regions)
                      ("O"        . 'mc/reverse-regions)))))
-
 
 (use-package git-gutter
   :ensure t
@@ -429,30 +439,42 @@
             (setq js2-cleanup-whitespace nil
                   js2-mirror-mode nil
                   js2-bounce-indent-flag nil
-                  js2-basic-offset 2
-                  indent-tabs-mode nil)))
+                  js2-basic-offset 4
+                  indent-tabs-mode t)))
 
 (use-package helm-hunks
   :ensure t
   :defer t
   :commands helm-hunks)
 
-(setq org-capture-templates
-      '(("c" "Code" entry (file+headline "~/org/code.org" "Codes")
-         "** %?\n %U\n %i\n %a\n %i\n")))
-(global-set-key "\C-cc" 'org-capture)
+(use-package helm-projectile
+  :ensure t
+  ;;:diminish projectile-mode
+  :bind (("C-c C-p" . helm-projectile-switch-project))
+  :init  (progn (projectile-global-mode)
+				 (helm-projectile-on)
+				 (setq projectile-use-native-indexing t)
+				 (setq projectile-enable-caching t)))
 
-;http://d.hatena.ne.jp/khiker/20110508/gnus
-;;; Gmail IMAP
-(setq gnus-select-method '(nnimap "gmail"
-                           (nnimap-address "imap.gmail.com")
-                           (nnimap-server-port 993)
-                           (nnimap-stream ssl)))
- ;;; Gmail SMTP
-(setq message-send-mail-function 'smtpmail-send-it
-      smtpmail-default-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-server "smtp.gmail.com"
-      smtpmail-smtp-service 587)
+(use-package switch-window
+:ensure t
+:config (progn
+		  (setq switch-window-shortcut-style 'qwerty)
+		  (global-set-key (kbd "C-x o") 'switch-window)))
+
+(use-package tabbar
+  :ensure t
+  :defer t)
+
+(setq org-directory "~/org")
+(setq org-capture-templates
+   '(("t" "Todo" entry (file (expand-file-name (concat org-directory "/todo.org")))
+      "* TODO %?\n    %i\n   %a\n    %T")
+     ("n" "note" entry (file (expand-file-name (concat org-directory "/notes.org")))
+      "* %?\n   %a\n    %T")
+     ("r" "reading" entry (file (expand-file-name (concat org-directory "/reading.org")))
+      "* %?\n   %a\n    %T")))
+(global-set-key "\C-cc" 'org-capture)
 
 ;; language settings
 (when (win?)
@@ -486,5 +508,95 @@
                               (concat "\\([[:space:]]*\\)" regexp)
                               1 spacing t)))))
 
+
+;; 外観変更
+(defconst color1 "#4682b4")
+(defconst color2 "#fa8072")
+(tabbar-mode 1)
+;; グループ化しない
+(setq tabbar-buffer-groups-function nil)
+;; 左に表示されるボタンを無効化
+(dolist (btn '(tabbar-buffer-home-button
+			   tabbar-scroll-left-button
+			   tabbar-scroll-right-button))
+  (set btn (cons (cons "" nil)
+				 (cons "" nil))))
+
+;; タブの長さ
+(setq tabbar-separator '(2.2))
+
+;; キーに割り当てる
+(global-set-key (kbd "<C-tab>") 'tabbar-forward-tab)
+(global-set-key (kbd "<C-iso-lefttab>") 'tabbar-backward-tab)
+
+(set-face-attribute
+ 'tabbar-default nil
+ :family "ゆたぽん（コーディング）Backsl"
+ :family "ゆたぽん（コーディング）Backsl"
+ :background "#34495E"
+ :foreground "#fff"
+ :bold nil
+ :height 0.95
+ )
+(set-face-attribute
+ 'tabbar-unselected nil
+ :background "#34495E"
+ :foreground "#fff"
+ :bold nil
+ :box nil
+ )
+(set-face-attribute
+ 'tabbar-modified nil
+ :background color1
+ :foreground "gray23"
+ :bold t
+ :box nil
+ )
+(set-face-attribute
+ 'tabbar-selected nil
+ :background color2
+ :foreground "#fff"
+ :bold nil
+ :box nil)
+(set-face-attribute
+ 'tabbar-button nil
+ :box nil)
+(set-face-attribute
+ 'tabbar-separator nil
+ :height 2.0)
+
+;; タブに表示させるバッファの設定
+(defvar my-tabbar-displayed-buffers
+  '("*vc-")
+  "*Regexps matches buffer names always included tabs.")
+
+(defun my-tabbar-buffer-list ()
+  "Return the list of buffers to show in tabs.
+Exclude buffers whose name starts with a space or an asterisk.
+The current buffer and buffers matches `my-tabbar-displayed-buffers'
+are always included."
+  (let* ((hides (list ?\  ?\*))
+		 (re (regexp-opt my-tabbar-displayed-buffers))
+		 (cur-buf (current-buffer))
+		 (tabs (delq nil
+					 (mapcar (lambda (buf)
+							   (let ((name (buffer-name buf)))
+								 (when (or (string-match re name)
+										   (not (memq (aref name 0) hides)))
+								   buf)))
+							 (buffer-list)))))
+	;; Always include the current buffer.
+	(if (memq cur-buf tabs)
+		tabs
+	  (cons cur-buf tabs))))
+(setq tabbar-buffer-list-function 'my-tabbar-buffer-list)
+
+(setq inhibit-startup-message t)
+(require 'dashboard)
+
+(setq dashboard-startup-banner "~/top.png")
+(dashboard-setup-startup-hook)
+
+(setq dashboard-items '( (projects . 5)(recents  . 20)))
 
 
