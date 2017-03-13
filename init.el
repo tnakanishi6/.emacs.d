@@ -25,8 +25,6 @@
                   (set-face-attribute 'default nil :family "Menlo"  :height 130) ;; font 設定
                   (set-fontset-font  nil 'japanese-jisx0208  (font-spec :family "Hiragino Kaku Gothic ProN")) ;; font 設定
                   (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9))))) ;; font 設定
-(if (linux?) (progn
-               (set-face-attribute 'default nil :family "ゆたぽん（コーディング）Backsl" :height 130)))
 
 ;; bookmark settings
 (setq bookmark-save-flag 1)
@@ -78,7 +76,7 @@
 (setq-default line-spacing 7) ;; line-spacing
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
 (set-frame-parameter nil 'alpha 92) ;; window-transparent
-(setq-default tab-width 4 indent-tabs-mode t) ;;default tab-mode
+(setq-default tab-width 2 indent-tabs-mode nil) ;;default tab-mode
 (setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines
 (setq visible-bell t) (setq ring-bell-function 'ignore);; turn off beep
 (setq kill-whole-line t) ;; allow kill-line
@@ -144,7 +142,7 @@
   (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
          (set-face-attribute 'whitespace-trailing nil :foreground my/bg-color :foreground "GreenYellow" :underline t)
          (set-face-attribute 'whitespace-space nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
-         (set-face-attribute 'whitespace-tab nil      :background my/bg-color :foreground "GreenYellow" :weight 'bold))
+         (set-face-attribute 'whitespace-tab nil      :background my/bg-color :foreground "Glay" :weight 'bold))
   (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
          (set-face-attribute 'whitespace-trailing nil :background "Black"  :foreground "GreenYellow" :underline t)
          (set-face-attribute 'whitespace-space nil    :background "GreenYellow" :foreground my/bg-color :weight 'bold)
@@ -167,7 +165,12 @@
 
 (use-package material-theme
   :ensure t
+  :disabled t
   :config (if window-system (load-theme 'material t)))
+
+(use-package atom-one-dark-theme
+  :ensure t
+  :config (if window-system (load-theme 'atom-one-dark t)))
 
 (use-package auto-complete
   :ensure t
@@ -176,13 +179,14 @@
                  (ac-config-default)
                  (setq ac-delay 0.1)
                  (setq ac-auto-show-menu 0.1)
-                 (setq ac-auto-start 2)
+                 (setq ac-auto-start 3)
                  (setq ac-use-menu-map t)
                  (setq ac-use-fuzzy t)
                  (setq ac-use-comphist t) 
                  (setq ac-dwim t)
-                 (setq-default ac-sources '(ac-source-filename ac-source-words-in-same-mode-buffers ac-source-yasnippet))
-                 (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")))
+                 (setq-default ac-sources '(ac-source-words-in-same-mode-buffers ac-source-yasnippet))
+                 ;;(add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")
+))
 
 (use-package smartparens
   :ensure t
@@ -206,8 +210,9 @@
 (use-package php-mode
   :ensure t
   :defer t
-  :config (progn (add-hook 'php-mode-hook 'php-boris-minor-mode)
-                 (add-hook 'php-mode-hook (lambda ()
+  :mode (("\\.php\\'" . php-mode))
+  :config (progn (add-hook 'php-mode-hook (lambda ()
+                                            (setq tab-width 4)
                                             (setq indent-tabs-mode t)))))
 
 (use-package undo-tree
@@ -299,6 +304,14 @@
                  (setq helm-candidate-number-limit 25)
                  (global-set-key (kbd "M-y") 'helm-show-kill-ring)))
 
+(use-package helm-ext
+  :ensure t
+  :config (progn
+    (helm-ext-ff-enable-skipping-dots t)
+    (setq helm-ext-ff-skipping-dots-recenter t)
+    (helm-ext-ff-enable-auto-path-expansion t)
+    (helm-ext-minibuffer-enable-header-line-maybe t)))
+
 (use-package helm-swoop
   :ensure t
   :config (progn (global-set-key (kbd "M-i") 'helm-swoop)
@@ -381,10 +394,6 @@
   :defer t
   :init
   (progn
-    ;; (add-hook 'emacs-lisp-mode-hook
-    ;;           (lambda ()
-    ;;             (enable-paredit-mode)
-    ;;             (define-key emacs-lisp-mode-map "\C-h" 'paredit-backward-delete)))
     (add-hook 'scheme-mode-hook
               (lambda ()
                 (enable-paredit-mode)
@@ -440,28 +449,41 @@
             (setq js2-cleanup-whitespace nil
                   js2-mirror-mode nil
                   js2-bounce-indent-flag nil
-                  js2-basic-offset 4
-                  indent-tabs-mode t)))
+                  js2-basic-offset 4)
+            (set-default indent-tabs-mode t)))
+;; (progn (add-hook 'php-mode-hook (lambda ()
+;;                                             (setq tab-width 4)
+;;                                             (setq indent-tabs-mode t))))
+
 
 (use-package helm-hunks
   :ensure t
   :defer t
   :commands helm-hunks)
 
+(use-package grizzl 
+  :ensure t
+  :disabled t)
+
 (use-package helm-projectile
   :ensure t
   ;;:diminish projectile-mode
   :bind (("C-c C-p" . helm-projectile-switch-project))
+  :config (progn
+      (add-to-list 'projectile-globally-ignored-files "*.png")
+      (add-to-list 'projectile-globally-ignored-files "*.jpg"))
   :init  (progn (projectile-global-mode)
-				 (helm-projectile-on)
-				 (setq projectile-use-native-indexing t)
-				 (setq projectile-enable-caching t)))
+         (helm-projectile-on)
+         (setq projectile-indexing-method 'alien)
+         (setq projectile-use-native-indexing t)
+         (setq projectile-enable-caching t)
+         (setq projectile-completion-system 'grizzl)))
 
 (use-package switch-window
 :ensure t
 :config (progn
-		  (setq switch-window-shortcut-style 'qwerty)
-		  (global-set-key (kbd "C-x o") 'switch-window)))
+      (setq switch-window-shortcut-style 'qwerty)
+      (global-set-key (kbd "C-x o") 'switch-window)))
 
 (use-package tabbar
   :ensure t
@@ -483,12 +505,14 @@
            (prefer-coding-system 'utf-8)
            (set-default-coding-systems 'utf-8)))
 (when (linux?)
-    (progn
-      (require 'mozc)
-      (set-language-environment "Japanese")
-      (setq default-input-method "japanese-mozc")
-      (global-set-key (kbd "<zenkaku-hankaku>") 'toggle-input-method)
-      (prefer-coding-system 'utf-8)))
+  (use-package mozc
+    :ensure t
+    :config (progn
+              (require 'mozc)
+              (set-language-environment "Japanese")
+              (setq default-input-method "japanese-mozc")
+              (global-set-key (kbd "<zenkaku-hankaku>") 'toggle-input-method)
+              (prefer-coding-system 'utf-8))))
 
 
 (defun align-regexp-repeated (start stop regexp)
@@ -509,95 +533,63 @@
                               (concat "\\([[:space:]]*\\)" regexp)
                               1 spacing t)))))
 
+(use-package dashboard
+  :ensure t
+  :config (progn
+      (setq dashboard-startup-banner "~/top.png")
+      (dashboard-setup-startup-hook)
+      (setq dashboard-items '( (projects . 5)(recents  . 20)))))
 
-;; 外観変更
-(defconst color1 "#4682b4")
-(defconst color2 "#fa8072")
-(tabbar-mode 1)
-;; グループ化しない
-(setq tabbar-buffer-groups-function nil)
-;; 左に表示されるボタンを無効化
-(dolist (btn '(tabbar-buffer-home-button
-			   tabbar-scroll-left-button
-			   tabbar-scroll-right-button))
-  (set btn (cons (cons "" nil)
-				 (cons "" nil))))
 
-;; タブの長さ
-(setq tabbar-separator '(2.2))
+(defun powerline-my-theme ()
+  "Setup the my mode-line."
+  (interactive)
+  (setq powerline-current-separator 'utf-8)
+  (setq-default mode-line-format
+                '("%e"
+                  (:eval
+                   (let* ((active (powerline-selected-window-active))
+                          (mode-line (if active 'mode-line 'mode-line-inactive))
+                          (face1 (if active 'mode-line-1-fg 'mode-line-2-fg))
+                          (face2 (if active 'mode-line-1-arrow 'mode-line-2-arrow))
+                          (separator-left (intern (format "powerline-%s-%s"
+                                                          (powerline-current-separator)
+                                                          (car powerline-default-separator-dir))))
+                          (lhs (list (powerline-raw " " face1)
+                                     (powerline-major-mode face1)
+                                     (powerline-raw " " face1)
+                                     (funcall separator-left face1 face2)
+                                     (powerline-buffer-id nil )
+                                     (powerline-raw " [ ")
+                                     (powerline-raw mode-line-mule-info nil)
+                                     (powerline-raw "%*" nil)
+                                     (powerline-raw " |")
+                                     (powerline-process nil)
+                                     (powerline-vc)
+                                     (powerline-raw " ]")
+                                     ))
+                          (rhs (list (powerline-raw "%4l" 'l)
+                                     (powerline-raw ":" 'l)
+                                     (powerline-raw "%2c" 'l)
+                                     (powerline-raw " | ")                                  
+                                     (powerline-raw "%6p" )
+                                     (powerline-raw " ")
+                                     )))
+                     (concat (powerline-render lhs)
+                             (powerline-fill nil (powerline-width rhs)) 
+                             (powerline-render rhs)))))))
 
-;; キーに割り当てる
-(global-set-key (kbd "<C-tab>") 'tabbar-forward-tab)
-(global-set-key (kbd "<C-iso-lefttab>") 'tabbar-backward-tab)
+(defun make/set-face (face-name fg-color bg-color weight)
+  (make-face face-name)
+  (set-face-attribute face-name nil
+                      :foreground fg-color :background bg-color :box nil :weight weight))
+(make/set-face 'mode-line-1-fg "#282C34" "#EF8300" 'bold)
+(make/set-face 'mode-line-2-fg "#AAAAAA" "#2F343D" 'bold)
+(make/set-face 'mode-line-1-arrow  "#AAAAAA" "#3E4451" 'bold)
+(make/set-face 'mode-line-2-arrow  "#AAAAAA" "#3E4451" 'bold)
 
-(set-face-attribute
- 'tabbar-default nil
- :family "ゆたぽん（コーディング）Backsl"
- :family "ゆたぽん（コーディング）Backsl"
- :background "#34495E"
- :foreground "#fff"
- :bold nil
- :height 0.95
- )
-(set-face-attribute
- 'tabbar-unselected nil
- :background "#34495E"
- :foreground "#fff"
- :bold nil
- :box nil
- )
-(set-face-attribute
- 'tabbar-modified nil
- :background color1
- :foreground "gray23"
- :bold t
- :box nil
- )
-(set-face-attribute
- 'tabbar-selected nil
- :background color2
- :foreground "#fff"
- :bold nil
- :box nil)
-(set-face-attribute
- 'tabbar-button nil
- :box nil)
-(set-face-attribute
- 'tabbar-separator nil
- :height 2.0)
-
-;; タブに表示させるバッファの設定
-(defvar my-tabbar-displayed-buffers
-  '("*vc-")
-  "*Regexps matches buffer names always included tabs.")
-
-(defun my-tabbar-buffer-list ()
-  "Return the list of buffers to show in tabs.
-Exclude buffers whose name starts with a space or an asterisk.
-The current buffer and buffers matches `my-tabbar-displayed-buffers'
-are always included."
-  (let* ((hides (list ?\  ?\*))
-		 (re (regexp-opt my-tabbar-displayed-buffers))
-		 (cur-buf (current-buffer))
-		 (tabs (delq nil
-					 (mapcar (lambda (buf)
-							   (let ((name (buffer-name buf)))
-								 (when (or (string-match re name)
-										   (not (memq (aref name 0) hides)))
-								   buf)))
-							 (buffer-list)))))
-	;; Always include the current buffer.
-	(if (memq cur-buf tabs)
-		tabs
-	  (cons cur-buf tabs))))
-(setq tabbar-buffer-list-function 'my-tabbar-buffer-list)
-
-(setq inhibit-startup-message t)
-(require 'dashboard)
-
-(setq dashboard-startup-banner "~/top.png")
-(dashboard-setup-startup-hook)
-
-(setq dashboard-items '( (projects . 5)(recents  . 20)))
-
+(use-package powerline
+  :ensure t
+  :config (progn
+      (powerline-my-theme)))
 
