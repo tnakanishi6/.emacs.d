@@ -26,6 +26,7 @@
                   (set-fontset-font  nil 'japanese-jisx0208  (font-spec :family "Hiragino Kaku Gothic ProN")) ;; font 設定
                   (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9))))) ;; font 設定
 
+
 ;; bookmark settings
 (setq bookmark-save-flag 1)
 (progn
@@ -75,8 +76,9 @@
 (setq inhibit-startup-message t) ;; hide wellcome page
 (setq-default line-spacing 7) ;; line-spacing
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
-(set-frame-parameter nil 'alpha 92) ;; window-transparent
+(set-frame-parameter nil 'alpha 100) ;; window-transparent
 (setq-default tab-width 2 indent-tabs-mode nil) ;;default tab-mode
+;;インデントをタブでするかスペースでするか
 (setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines
 (setq visible-bell t) (setq ring-bell-function 'ignore);; turn off beep
 (setq kill-whole-line t) ;; allow kill-line
@@ -184,7 +186,14 @@
                  (setq ac-use-fuzzy t)
                  (setq ac-use-comphist t) 
                  (setq ac-dwim t)
-                 (setq-default ac-sources '(ac-source-words-in-same-mode-buffers ac-source-yasnippet))
+                 ;;(setq-default ac-sources '(ac-source-words-in-same-mode-buffers ac-source-yasnippet))
+                 (setq-default ac-sources '(
+                                            ;;ac-source-words-in-same-mode-buffers
+                                            ac-source-words-in-buffer
+                                            ac-source-yasnippet
+                                            ac-source-imenu 
+                                            ))
+                 
                  ;;(add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")
 ))
 
@@ -205,15 +214,21 @@
 (use-package php-boris-minor-mode
   :ensure t
   :defer t
-	:config (setq php-scratch-boris-command "~/bin/boris"))
+  :config (setq php-scratch-boris-command "~/bin/boris"))
 
 (use-package php-mode
   :ensure t
   :defer t
-  :mode (("\\.php\\'" . php-mode))
+  :mode (("\.php$" . php-mode))
   :config (progn (add-hook 'php-mode-hook (lambda ()
+                                            (setq c-basic-offset 4)
                                             (setq tab-width 4)
-                                            (setq indent-tabs-mode t)))))
+                                            (setq indent-tabs-mode t)
+
+                                            (c-set-offset 'case-label' 4)
+                                            (c-set-offset 'arglist-intro' 4)
+                                            (c-set-offset 'arglist-cont-nonempty' 4)
+                                            (c-set-offset 'arglist-close' 0)))))
 
 (use-package undo-tree
   :ensure t
@@ -307,7 +322,7 @@
 (use-package helm-ext
   :ensure t
   :config (progn
-    (helm-ext-ff-enable-skipping-dots t)
+            ;;(helm-ext-ff-enable-skipping-dots t)
     (setq helm-ext-ff-skipping-dots-recenter t)
     (helm-ext-ff-enable-auto-path-expansion t)
     (helm-ext-minibuffer-enable-header-line-maybe t)))
@@ -378,7 +393,8 @@
   :ensure t)
 
 (use-package pcre2el
-  :ensure t)
+  :ensure t
+  :disabled t)
 
 (use-package visual-regexp-steroids
   :ensure t
@@ -403,6 +419,9 @@
 
 (use-package web-mode
   :ensure t
+  :config (progn (add-hook 'web-mode-hook (lambda ()
+                                            (setq tab-width 4)
+                                            (setq indent-tabs-mode t))))
   :mode (("\\.ctp" . web-mode)
          ("\\.html" . web-mode)))
 
@@ -446,14 +465,22 @@
   :defer t
   :mode (("\.js$" . js2-mode))
   :config (progn
-            (setq js2-cleanup-whitespace nil
-                  js2-mirror-mode nil
-                  js2-bounce-indent-flag nil
-                  js2-basic-offset 4)
-            (set-default indent-tabs-mode t)))
-;; (progn (add-hook 'php-mode-hook (lambda ()
-;;                                             (setq tab-width 4)
-;;                                             (setq indent-tabs-mode t))))
+            (add-hook 'js-mode-hook (lambda ()
+                                      (setq js2-cleanup-whitespace nil
+                                            js2-mirror-mode nil
+                                            js2-bounce-indent-flag nil
+                                            js2-basic-offset 4)
+                                      (setq tab-width 4)
+                                      (setq indent-tabs-mode t)))))
+
+(use-package coffee-mode
+  :ensure t
+  :defer t
+  :mode (("\.js$" . js2-mode))
+  :config (progn (add-hook 'coffee-mode-hook (lambda ()
+                                            (setq tab-width 4)
+                                            (setq indent-tabs-mode t)))))
+
 
 
 (use-package helm-hunks
@@ -467,17 +494,20 @@
 
 (use-package helm-projectile
   :ensure t
-  ;;:diminish projectile-mode
-  :bind (("C-c C-p" . helm-projectile-switch-project))
-  :config (progn
-      (add-to-list 'projectile-globally-ignored-files "*.png")
-      (add-to-list 'projectile-globally-ignored-files "*.jpg"))
-  :init  (progn (projectile-global-mode)
-         (helm-projectile-on)
-         (setq projectile-indexing-method 'alien)
-         (setq projectile-use-native-indexing t)
-         (setq projectile-enable-caching t)
-         (setq projectile-completion-system 'grizzl)))
+  ;;:bind (("C-c C-p" . helm-projectile-switch-project))
+  :init (progn
+          (projectile-global-mode)
+          (helm-projectile-on)
+          (setq projectile-indexing-method 'alien)
+          (setq projectile-use-native-indexing t)
+          (setq projectile-enable-caching t)
+          (setq projectile-globally-ignored-directories 
+                (append '(".git"
+                          "gulp/node_modules"
+                          "cakephp/lib"
+                          "php-vendor"
+                          "html.bak") projectile-globally-ignored-directories))))
+
 
 (use-package switch-window
 :ensure t
@@ -592,4 +622,14 @@
   :ensure t
   :config (progn
       (powerline-my-theme)))
+
+(add-to-list 'load-path "~/.emacs.d/lisp")
+(require 'auto-rsync)
+(require 'foreign-regexp)
+(custom-set-variables
+ '(foreign-regexp/regexp-type 'perl) ;; use perl's regexp (or ruby)
+ '(reb-re-syntax 'foreign-regexp))   ;; use foreign regexp in re-builder
+
+(auto-rsync-mode t)
+
 
