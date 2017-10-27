@@ -280,17 +280,12 @@
   :bind (("C-x SPC" . ace-jump-mode)
          ("C-c SPC" . ace-jump-mode)))
 
-(require 'ace-jump-mode)
-(defun add-keys-to-ace-jump-mode (prefix c &optional mode)
-  (define-key global-map
-    (read-kbd-macro (concat prefix (string c)))
-    `(lambda ()
-       (interactive)
-       (funcall (if (eq ',mode 'word)
-                    #'ace-jump-word-mode
-                  #'ace-jump-char-mode) ,c))))
-
-(loop for c from ?! to ?~ do (add-keys-to-ace-jump-mode "H-" c 'word))
+(use-package avy
+  :ensure t
+  :config (progn (setq avy-timeout-seconds 0.4))
+  :bind (("M-g" . avy-goto-line)
+         ("C-;" . avy-goto-char-timer)
+         ("C-:" . avy-goto-char-timer)))
 
 (use-package helm
   :ensure t
@@ -632,6 +627,9 @@
 (add-to-list 'load-path "~/.emacs.d/lisp")
 (require 'auto-rsync)
 (require 'foreign-regexp)
+(global-set-key (kbd "C-M-s") 'foreign-regexp/isearch-forward)
+(global-set-key (kbd "C-M-r") 'foreign-regexp/isearch-backward)
+
 (custom-set-variables
  '(foreign-regexp/regexp-type 'perl) ;; use perl's regexp (or ruby)
  '(reb-re-syntax 'foreign-regexp))   ;; use foreign regexp in re-builder
