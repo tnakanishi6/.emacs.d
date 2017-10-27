@@ -1,3 +1,5 @@
+(setq warning-minimum-level :emergency)
+
 ;; initial settings
 (require 'cl)
 (defun suspend-frame () nil) 
@@ -76,7 +78,7 @@
 (setq inhibit-startup-message t) ;; hide wellcome page
 (setq-default line-spacing 7) ;; line-spacing
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
-(set-frame-parameter nil 'alpha 100) ;; window-transparent
+(set-frame-parameter nil 'alpha 92) ;; window-transparent
 (setq-default tab-width 2 indent-tabs-mode nil) ;;default tab-mode
 ;;インデントをタブでするかスペースでするか
 (setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines
@@ -172,6 +174,7 @@
 
 (use-package atom-one-dark-theme
   :ensure t
+;;  :disabled t
   :config (if window-system (load-theme 'atom-one-dark t)))
 
 (use-package auto-complete
@@ -193,7 +196,6 @@
                                             ac-source-yasnippet
                                             ac-source-imenu 
                                             ))
-                 
                  ;;(add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")
 ))
 
@@ -224,7 +226,6 @@
                                             (setq c-basic-offset 4)
                                             (setq tab-width 4)
                                             (setq indent-tabs-mode t)
-
                                             (c-set-offset 'case-label' 4)
                                             (c-set-offset 'arglist-intro' 4)
                                             (c-set-offset 'arglist-cont-nonempty' 4)
@@ -423,7 +424,8 @@
                                             (setq tab-width 4)
                                             (setq indent-tabs-mode t))))
   :mode (("\\.ctp" . web-mode)
-         ("\\.html" . web-mode)))
+         ("\\.html" . web-mode)
+         ("\\.vue" . web-mode)))
 
 (use-package magit
   :ensure t
@@ -508,6 +510,9 @@
                           "php-vendor"
                           "html.bak") projectile-globally-ignored-directories))))
 
+(defun projectile-remove-cache-file ()
+  (interactive)
+  (delete-file "~/.emacs.d/projectile.cache"))
 
 (use-package switch-window
 :ensure t
@@ -542,7 +547,8 @@
               (set-language-environment "Japanese")
               (setq default-input-method "japanese-mozc")
               (global-set-key (kbd "<zenkaku-hankaku>") 'toggle-input-method)
-              (prefer-coding-system 'utf-8))))
+              (prefer-coding-system 'utf-8)
+              (setq mozc-candidate-style 'overlay))))
 
 
 (defun align-regexp-repeated (start stop regexp)
@@ -631,5 +637,5 @@
  '(reb-re-syntax 'foreign-regexp))   ;; use foreign regexp in re-builder
 
 (auto-rsync-mode t)
-
-
+(with-eval-after-load 'flycheck
+  (flycheck-pos-tip-mode))
