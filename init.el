@@ -64,6 +64,12 @@
   "Returns the major mode associated with a buffer."
   (interactive)  (message "%s" major-mode))
 
+(defun projectile-remove-cache-file ()
+  (interactive)
+  (delete-file "~/.emacs.d/projectile.cache"))
+(when (file-exists-p "~/.emacs.d/projectile.cache") 
+    (delete-file "~/.emacs.d/projectile.cache"))
+
 ;; general settings
 (setq initial-scratch-message nil) ;; This buffer〜で始まる文章を表示しない
 (setq initial-major-mode 'emacs-lisp-mode) 
@@ -505,9 +511,6 @@
                           "php-vendor"
                           "html.bak") projectile-globally-ignored-directories))))
 
-(defun projectile-remove-cache-file ()
-  (interactive)
-  (delete-file "~/.emacs.d/projectile.cache"))
 
 (use-package switch-window
 :ensure t
@@ -571,6 +574,9 @@
       (dashboard-setup-startup-hook)
       (setq dashboard-items '( (projects . 5)(recents  . 20)))))
 
+(use-package helm-tramp
+  :ensure t
+)
 
 (defun powerline-my-theme ()
   "Setup the my mode-line."
@@ -630,10 +636,7 @@
 (global-set-key (kbd "C-M-s") 'foreign-regexp/isearch-forward)
 (global-set-key (kbd "C-M-r") 'foreign-regexp/isearch-backward)
 
-(custom-set-variables
- '(foreign-regexp/regexp-type 'perl) ;; use perl's regexp (or ruby)
- '(reb-re-syntax 'foreign-regexp))   ;; use foreign regexp in re-builder
-
 (auto-rsync-mode t)
+
 (with-eval-after-load 'flycheck
   (flycheck-pos-tip-mode))
