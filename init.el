@@ -64,6 +64,37 @@
   "Returns the major mode associated with a buffer."
   (interactive)  (message "%s" major-mode))
 
+(defun php-class-setter-from-string ()
+  (interactive)
+  (let ((str (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+    (insert (concat "->set" (s-upper-camel-case str) "($inputData['" str "'])" "\n"))
+    (kill-line)))
+
+(defun php-class-validation-from-string()
+  (interactive)
+  (let ((str (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+    (insert (concat "$this->validate['" str "'] = $this->__ValidationRule->get" (s-upper-camel-case str) "ValidationRule();" "\n"))
+    (kill-line)))
+
+(defun php-class-getter-function-from-string (str)
+  (concat "public function get" (s-upper-camel-case str) "(){" "\n"
+          "	return isset($this->" str ") ? $this->" str ": false;\n"
+          "}" "\n"))
+
+(defun php-class-setter-function-from-string (str)
+  (concat "public function set" (s-upper-camel-case str) "($val){" "\n"
+        "	$this->" str " = $val;" "\n"
+        "	return $this;" "\n"
+        "}" "\n"))
+
+(defun php-class-function-from-string ()
+  (interactive)
+  (let ((str (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
+    (delete-region (point-at-bol) (point-at-eol))
+    (insert (php-class-getter-function-from-string str))
+    (insert (php-class-setter-function-from-string str))
+    (kill-line)))
+
 (defun projectile-remove-cache-file ()
   (interactive)
   (delete-file "~/.emacs.d/projectile.cache"))
@@ -167,6 +198,7 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"));; MELPAを追加
 (add-to-list 'package-archives  '("marmalade" . "http://marmalade-repo.org/packages/"));; Marmaladeを追加
+;;(add-to-list 'package-archives  '("melpa" . "http://melpa.org/packages/"));; 
 (package-initialize)
 
 (when (not (package-installed-p 'use-package))
@@ -228,6 +260,9 @@
   :ensure t
   :defer t
   :mode (("\.php$" . php-mode))
+  :bind (("M-p p" . php-class-function-from-string)
+         ("M-p s" . php-class-setter-from-string)
+         ("M-p v" . php-class-validation-from-string))
   :config (progn (add-hook 'php-mode-hook (lambda ()
                                             (setq c-basic-offset 4)
                                             (setq tab-width 4)
@@ -472,9 +507,9 @@
                                       (setq js2-cleanup-whitespace nil
                                             js2-mirror-mode nil
                                             js2-bounce-indent-flag nil
-                                            js2-basic-offset 4)
-                                      (setq tab-width 4)
-                                      (setq indent-tabs-mode t)))))
+                                            js2-basic-offset 2)
+                                      (setq tab-width 2)
+                                      (setq indent-tabs-mode nil)))))
 
 (use-package coffee-mode
   :ensure t
@@ -501,6 +536,12 @@
   :init (progn
           (projectile-global-mode)
           (helm-projectile-on)
+          (setq projectile-switch-project-action 'helm-projectile)
+          (defvar helm-source-file-not-found
+            (helm-build-dummy-source
+                "Create file"
+              :action 'find-file))
+          (add-to-list 'helm-projectile-sources-list helm-source-file-not-found t)
           (setq projectile-indexing-method 'alien)
           (setq projectile-use-native-indexing t)
           (setq projectile-enable-caching t)
@@ -511,6 +552,9 @@
                           "php-vendor"
                           "html.bak") projectile-globally-ignored-directories))))
 
+(defun projectile-remove-cache-file ()
+  (interactive)
+  (delete-file "~/.emacs.d/projectile.cache"))
 
 (use-package switch-window
 :ensure t
@@ -576,7 +620,14 @@
 
 (use-package helm-tramp
   :ensure t
-)
+  )
+
+(use-package plantuml-mode
+  :ensure t
+  :mode (("\.puml$" . plantuml-mode) ("\.plantuml$" . plantuml-mode))
+  :config (progn
+      (powerline-my-theme)))
+
 
 (defun powerline-my-theme ()
   "Setup the my mode-line."
