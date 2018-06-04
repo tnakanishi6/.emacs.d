@@ -122,8 +122,9 @@
 (setq visible-bell t) (setq ring-bell-function 'ignore);; turn off beep
 (setq kill-whole-line t) ;; allow kill-line
 (setq backup-directory-alist
-      (cons (cons ".*" (expand-file-name "~/.emacs.d/backups")) backup-directory-alist)) ;; backup file
-(setq auto-save-default nil) ;; unauto savea
+  (cons (cons ".*" (expand-file-name "~/.emacs.d/backups")) backup-directory-alist))
+(setq auto-save-file-name-transforms
+  `((".*", (expand-file-name "~/.emacs.d/savefiles") t)))
 (setq split-height-threshold nil) (setq split-width-threshold nil) ;; window split controll
 (show-paren-mode t) ;;
 (progn  (cua-mode t)
@@ -172,22 +173,13 @@
             (when (equal "Japanese" current-language-environment)
               (setq default-buffer-file-coding-system 'iso-2022-jp))))
 
-;; whitespace
+;;whitespace
 (require 'whitespace)
 (setq whitespace-style '(face trailings spaces space-mark tab-mark tabs))
 (setq whitespace-action '(auto-cleanup))
 (setq whitespace-space-regexp "\\(\u3000+\\)")
 
-(defvar my/bg-color "#263238")
-(if window-system
-  (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
-         (set-face-attribute 'whitespace-trailing nil :foreground my/bg-color :foreground "GreenYellow" :underline t)
-         (set-face-attribute 'whitespace-space nil    :background my/bg-color :foreground "GreenYellow" :weight 'bold)
-         (set-face-attribute 'whitespace-tab nil      :background my/bg-color :foreground "Glay" :weight 'bold))
-  (progn (setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
-         (set-face-attribute 'whitespace-trailing nil :background "Black"  :foreground "GreenYellow" :underline t)
-         (set-face-attribute 'whitespace-space nil    :background "GreenYellow" :foreground my/bg-color :weight 'bold)
-         (set-face-attribute 'whitespace-tab nil      :background "color-236" :foreground "Blue" :underline t)))
+(setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
 (global-whitespace-mode 1)
 
 ;; org
@@ -197,6 +189,7 @@
 
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"));; MELPAを追加
+(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 (add-to-list 'package-archives  '("marmalade" . "http://marmalade-repo.org/packages/"));; Marmaladeを追加
 ;;(add-to-list 'package-archives  '("melpa" . "http://melpa.org/packages/"));; 
 (package-initialize)
@@ -207,13 +200,20 @@
 
 (use-package material-theme
   :ensure t
-  :disabled t
-  :config (if window-system (load-theme 'material t)))
+  ;;:disabled t
+  :config (load-theme 'material t))
 
 (use-package atom-one-dark-theme
   :ensure t
-;;  :disabled t
-  :config (if window-system (load-theme 'atom-one-dark t)))
+  :disabled t
+  :config (load-theme 'atom-one-dark t))
+
+(use-package monokai-theme
+  :ensure t
+  :disabled t
+  :config (load-theme 'monokai t))
+
+
 
 (use-package auto-complete
   :ensure t
@@ -229,7 +229,7 @@
                  (setq ac-dwim t)
                  ;;(setq-default ac-sources '(ac-source-words-in-same-mode-buffers ac-source-yasnippet))
                  (setq-default ac-sources '(
-                                            ;;ac-source-words-in-same-mode-buffers
+                                            ac-source-words-in-same-mode-buffers
                                             ac-source-words-in-buffer
                                             ac-source-yasnippet
                                             ac-source-imenu 
@@ -325,8 +325,18 @@
   :ensure t
   :config (progn (setq avy-timeout-seconds 0.4))
   :bind (("M-g" . avy-goto-line)
-         ("C-;" . avy-goto-char-timer)
-         ("C-:" . avy-goto-char-timer)))
+         ("C-;" . avy-goto-word-1)
+         ("C-:" . avy-goto-word-1)))
+
+(defun add-keys-to-ace-jump-mode (prefix c &optional mode)
+  (define-key global-map
+    (read-kbd-macro (concat prefix (string c)))
+    `(lambda ()
+       (interactive)
+       (funcall #'avy-goto-word-1 ,c))))
+
+(loop for c from ?0 to ?9 do (add-keys-to-ace-jump-mode "s-" c))
+(loop for c from ?a to ?z do (add-keys-to-ace-jump-mode "s-" c))
 
 (use-package helm
   :ensure t
@@ -507,7 +517,11 @@
                                       (setq js2-cleanup-whitespace nil
                                             js2-mirror-mode nil
                                             js2-bounce-indent-flag nil
-                                            js2-basic-offset 2)
+                                            js2-basic-offset 2
+                                            js2-strict-inconsistent-return-warning nil
+                                            js2-strict-missing-semi-warning nil
+                                            js2-missing-semi-one-line-override nil)
+                                      
                                       (setq tab-width 2)
                                       (setq indent-tabs-mode nil)))))
 
@@ -559,8 +573,9 @@
 (use-package switch-window
 :ensure t
 :config (progn
-      (setq switch-window-shortcut-style 'qwerty)
-      (global-set-key (kbd "C-x o") 'switch-window)))
+          ;;(setq switch-window-shortcut-style 'qwerty)
+          (add-hook 'switch-window-finish-hook 'golden-ratio)
+          (global-set-key (kbd "C-x o") 'switch-window)))
 
 (use-package tabbar
   :ensure t
@@ -681,13 +696,22 @@
   :config (progn
       (powerline-my-theme)))
 
+(use-package foreign-regexp
+  :ensure t
+  :config (progn
+            (custom-set-variables '(foreign-regexp/regexp-type 'perl))
+            (global-set-key (kbd "C-M-s") 'foreign-regexp/isearch-forward)
+            (global-set-key (kbd "C-M-r") 'foreign-regexp/isearch-backward)
+            (global-set-key (kbd "C-M-%") 'foreign-regexp/query-replace)
+            '(reb-re-syntax 'foreign-regexp)))
+
 (add-to-list 'load-path "~/.emacs.d/lisp")
 (require 'auto-rsync)
-(require 'foreign-regexp)
-(global-set-key (kbd "C-M-s") 'foreign-regexp/isearch-forward)
-(global-set-key (kbd "C-M-r") 'foreign-regexp/isearch-backward)
 
 (auto-rsync-mode t)
 
 (with-eval-after-load 'flycheck
   (flycheck-pos-tip-mode))
+
+(global-set-key (kbd "M-z") 'avy-zap-up-to-char)
+(require 'tramp)
