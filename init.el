@@ -745,7 +745,7 @@
 (require 'git-complete)
 (global-set-key (kbd "C-c g") 'git-complete)
 
-
+(auto-rsync-mode t)
 
 (with-eval-after-load 'flycheck
   (flycheck-pos-tip-mode))
