@@ -26,8 +26,10 @@
                   (setq scheme-program-name "/opt/local/bin/gosh -i")
                   (set-face-attribute 'default nil :family "Menlo"  :height 130) ;; font 設定
                   (set-fontset-font  nil 'japanese-jisx0208  (font-spec :family "Hiragino Kaku Gothic ProN")) ;; font 設定
-                  (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9))))) ;; font 設定
-
+                  (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9)))))
+(if (linux?) (progn 
+               (set-fontset-font nil 'japanese-jisx0208 (font-spec :family "Yutapon coding Regular"));; font 設定
+               (setq face-font-rescale-alist '(("Yutapon coding Regular" . 1.08)))))
 
 ;; bookmark settings
 (setq bookmark-save-flag 1)
@@ -200,12 +202,12 @@
 
 (use-package material-theme
   :ensure t
-  ;;:disabled t
+  :disabled t
   :config (load-theme 'material t))
 
 (use-package atom-one-dark-theme
   :ensure t
-  :disabled t
+  ;;:disabled t
   :config (load-theme 'atom-one-dark t))
 
 (use-package monokai-theme
@@ -215,27 +217,58 @@
 
 
 
-(use-package auto-complete
+;; (use-package auto-complete
+;;   :ensure t
+;;   :config (progn (require 'auto-complete-config)
+;;                  (global-auto-complete-mode t)s
+;;                  (ac-config-default)
+;;                  (setq ac-delay 0.1)
+;;                  (setq ac-auto-show-menu 0.1)
+;;                  (setq ac-auto-start 3)
+;;                  (setq ac-use-menu-map t)
+;;                  (setq ac-use-fuzzy t)
+;;                  (setq ac-use-comphist t) 
+;;                  (setq ac-dwim t)
+;;                  ;;(setq-default ac-sources '(ac-source-words-in-same-mode-buffers ac-source-yasnippet))
+;;                  (setq-default ac-sources '(
+;;                                             ac-source-words-in-same-mode-buffers
+;;                                             ac-source-words-in-buffer
+;;                                             ac-source-yasnippet
+;;                                             ac-source-imenu 
+;;                                             ))
+;;                  ;;(add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")
+;; ))
+
+(use-package company
   :ensure t
-  :config (progn (require 'auto-complete-config)
-                 (global-auto-complete-mode t)
-                 (ac-config-default)
-                 (setq ac-delay 0.1)
-                 (setq ac-auto-show-menu 0.1)
-                 (setq ac-auto-start 3)
-                 (setq ac-use-menu-map t)
-                 (setq ac-use-fuzzy t)
-                 (setq ac-use-comphist t) 
-                 (setq ac-dwim t)
-                 ;;(setq-default ac-sources '(ac-source-words-in-same-mode-buffers ac-source-yasnippet))
-                 (setq-default ac-sources '(
-                                            ac-source-words-in-same-mode-buffers
-                                            ac-source-words-in-buffer
-                                            ac-source-yasnippet
-                                            ac-source-imenu 
-                                            ))
-                 ;;(add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")
-))
+  :config (progn (global-company-mode)
+                 (add-hook 'after-init-hook 'company-statistics-mode)
+                 (setq company-transformers '(company-sort-by-statistics company-sort-by-backend-importance))
+                 (setq company-idle-delay 0)
+                 (setq company-minimum-prefix-length 2)
+                 (setq completion-ignore-case t)
+                 (setq company-dabbrev-downcase nil)
+                 (global-set-key (kbd "C-M-i") 'company-complete)
+                 (define-key company-active-map (kbd "C-n") 'company-select-next) ;; C-n, C-pで補完候補を次/前の候補を選択
+                 (define-key company-active-map (kbd "C-p") 'company-select-previous)
+                 (define-key company-search-map (kbd "C-n") 'company-select-next)
+                 (define-key company-search-map (kbd "C-p") 'company-select-previous)
+                 (define-key company-active-map (kbd "C-s") 'company-filter-candidates) ;; C-sで絞り込む
+                 (define-key company-active-map (kbd "C-i") 'company-complete-selection) ;; TABで候補を設定
+                 (define-key company-active-map (kbd "C-h") nil) ;; C-hはバックスペース割当のため無効化
+                 (define-key company-active-map [tab] 'company-complete-selection) ;; TABで候補を設定
+                 (define-key company-active-map (kbd "C-f") 'company-complete-selection) ;; C-fで候補を設定
+                 (define-key emacs-lisp-mode-map (kbd "C-M-i") 'company-complete) 
+                 ;; yasnippetとの連携
+                 (defvar company-mode/enable-yas t
+                   "Enable yasnippet for all backends.")
+                 (defun company-mode/backend-with-yas (backend)
+                   (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
+                       backend
+                     (append (if (consp backend) backend (list backend))
+                             '(:with company-yasnippet))))
+                 (setq company-backends (mapcar #'company-mode/backend-with-yas company-backends))
+                 ))
 
 (use-package smartparens
   :ensure t
@@ -374,18 +407,11 @@
     (helm-ext-ff-enable-auto-path-expansion t)
     (helm-ext-minibuffer-enable-header-line-maybe t)))
 
-(use-package helm-swoop
+(use-package swiper-helm
   :ensure t
-  :config (progn (global-set-key (kbd "M-i") 'helm-swoop)
-                 (global-set-key (kbd "M-I") 'helm-swoop-back-to-last-point)
-                 (global-set-key (kbd "C-c M-i") 'helm-multi-swoop)
-                 (global-set-key (kbd "C-x M-i") 'helm-multi-swoop-all)
-                 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
-                 (define-key helm-swoop-map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
-                 (setq helm-swoop-use-fuzzy-match t)
-                 (setq helm-multi-swoop-edit-save t) ;; Save buffer when helm-multi-swoop-edit complete
-                 (setq helm-swoop-split-with-multiple-windows nil) ;; 値がtの場合はウィンドウ内に分割、nilなら別のウィンドウを使用
-                 (setq helm-swoop-split-direction 'split-window-vertically))) ;; ウィンドウ分割方向 'split-window-vertically or 'split-window-horizontally))
+  :config (progn (global-set-key (kbd "M-i") 'swiper)))
+
+
 
 ;; (use-package geiser
 ;;   :ensure t
@@ -696,6 +722,15 @@
   :config (progn
       (powerline-my-theme)))
 
+(use-package dumb-jump
+  :ensure t
+  :config (progn
+            (setq dumb-jump-default-project "")
+            (setq dumb-jump-force-searcher 'ag)
+            (global-set-key (kbd "C-M-w") 'dumb-jump-go-other-window)
+            (dumb-jump-mode)
+            ))
+
 (use-package foreign-regexp
   :ensure t
   :config (progn
@@ -707,8 +742,10 @@
 
 (add-to-list 'load-path "~/.emacs.d/lisp")
 (require 'auto-rsync)
+(require 'git-complete)
+(global-set-key (kbd "C-c g") 'git-complete)
 
-(auto-rsync-mode t)
+
 
 (with-eval-after-load 'flycheck
   (flycheck-pos-tip-mode))
