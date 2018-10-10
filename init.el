@@ -2,7 +2,7 @@
 
 ;; initial settings
 (require 'cl)
-(defun suspend-frame () nil) 
+(global-set-key "\C-z" nil)
 
 ;; enviroment settings
 (defun mac? ()    (string-match "apple-darwin" system-configuration))
@@ -21,12 +21,34 @@
                   (setq scheme-program-name "gosh -i")
                   (setenv "PATH"(concat "c:/Program Files (x86)/PuTTY;" (getenv "PATH")))
                   (add-to-list 'exec-path"c:/Program Files (x86)/PuTTY;")))
-(if (mac?) (progn (setq ns-command-modifier (quote meta))
-                  (setq ns-alternate-modifier (quote super))
-                  (setq scheme-program-name "/opt/local/bin/gosh -i")
-                  (set-face-attribute 'default nil :family "Menlo"  :height 130) ;; font 設定
-                  (set-fontset-font  nil 'japanese-jisx0208  (font-spec :family "Hiragino Kaku Gothic ProN")) ;; font 設定
-                  (setq face-font-rescale-alist  '((".*Hiragino_Kaku_Gothic_ProN.*" . 0.9)))))
+(if (mac?) (progn
+
+             (let* ((font-family "Source Code Pro")
+                    (font-size 12)
+                    (font-height (* font-size 10))
+                    (jp-font-family "Ricty Diminished")
+                    ;;(jp-font-family "Hiragino Kaku Gothic ProN")
+                    )
+               (set-face-attribute 'default nil :family font-family :height font-height)
+               (let ((name (frame-parameter nil 'font))
+                     (jp-font-spec (font-spec :family jp-font-family))
+                     (jp-characters '(katakana-jisx0201
+                                      cp932-2-byte
+                                      japanese-jisx0212
+                                      japanese-jisx0213-2
+                                      japanese-jisx0213.2004-1))
+                     (font-spec (font-spec :family font-family))
+                     (characters '((?\u00A0 . ?\u00FF)    ; Latin-1
+                                   (?\u0100 . ?\u017F)    ; Latin Extended-A
+                                   (?\u0180 . ?\u024F)    ; Latin Extended-B
+                                   (?\u0250 . ?\u02AF)    ; IPA Extensions
+                                   (?\u0370 . ?\u03FF)))) ; Greek and Coptic
+                 (dolist (jp-character jp-characters)
+                   (set-fontset-font name jp-character jp-font-spec))
+                 (dolist (character characters)
+                   (set-fontset-font name character font-spec))
+                 (add-to-list 'face-font-rescale-alist (cons jp-font-family 1))))))
+
 (if (linux?) (progn 
                (set-fontset-font nil 'japanese-jisx0208 (font-spec :family "Yutapon coding Regular"));; font 設定
                (setq face-font-rescale-alist '(("Yutapon coding Regular" . 1.08)))))
@@ -216,6 +238,16 @@
   :config (load-theme 'monokai t))
 
 
+(use-package elscreen
+  :ensure t
+  :config (progn (setq elscreen-prefix-key (kbd "C-z"))
+                 (elscreen-start)
+                 (setq elscreen-tab-display-kill-screen nil)
+                 (setq elscreen-tab-display-control nil)))
+
+(use-package helm-elscreen 
+  :ensure t
+  :config (global-set-key (kbd "C-z b") 'helm-elscreen))
 
 ;; (use-package auto-complete
 ;;   :ensure t
@@ -411,18 +443,6 @@
   :ensure t
   :config (progn (global-set-key (kbd "M-i") 'swiper)))
 
-
-
-;; (use-package geiser
-;;   :ensure t
-;;   :defer t
-;;   :config (progn (if (win?)
-;;                      (setq geiser-racket-binary "Racket.exe"))
-;;                  (if (mac?)
-;;                      (setq geiser-racket-binary "/Applications/Racket v6.3/bin/racket"))
-;;                  (setq geiser-active-implementations '(racket))
-;;                  (setq geiser-repl-read-only-prompt-p nil)))
-
 (use-package rainbow-delimiters
   :ensure t
   :config (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
@@ -559,8 +579,6 @@
                                             (setq tab-width 4)
                                             (setq indent-tabs-mode t)))))
 
-
-
 (use-package helm-hunks
   :ensure t
   :defer t
@@ -599,13 +617,9 @@
 (use-package switch-window
 :ensure t
 :config (progn
-          ;;(setq switch-window-shortcut-style 'qwerty)
+          (setq switch-window-shortcut-style 'qwerty)
           (add-hook 'switch-window-finish-hook 'golden-ratio)
           (global-set-key (kbd "C-x o") 'switch-window)))
-
-(use-package tabbar
-  :ensure t
-  :defer t)
 
 (setq org-directory "~/org")
 (setq org-capture-templates
@@ -741,14 +755,38 @@
             '(reb-re-syntax 'foreign-regexp)))
 
 (add-to-list 'load-path "~/.emacs.d/lisp")
+(load "~/.emacs.d/private/settings")
+
 (require 'auto-rsync)
 (require 'git-complete)
+(require 'operate-chrome)
 (global-set-key (kbd "C-c g") 'git-complete)
 
 (auto-rsync-mode t)
 
-(with-eval-after-load 'flycheck
-  (flycheck-pos-tip-mode))
+(setq open-junk-file-format "~/.tmp/junk/%Y/%m/%Y-%m-%d-%H%M%S.")
+(global-set-key (kbd "C-x j") 'open-junk-file)
 
 (global-set-key (kbd "M-z") 'avy-zap-up-to-char)
 (require 'tramp)
+
+
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(foreign-regexp/regexp-type (quote perl))
+ '(package-selected-packages
+   (quote
+    (elscreen ag helm-ag graphql nodejs-repl sudden-death company-statistics yasnippet web-mode volatile-highlights visual-regexp-steroids use-package undo-tree tabbar switch-window swiper-helm smartrep smartparens sequential-command scss-mode rainbow-delimiters powerline plantuml-mode php-mode php-boris-minor-mode paredit org-present open-junk-file multiple-cursors moccur-edit magit js2-mode helm-tramp helm-rg helm-projectile helm-hunks helm-ext git-gutter foreign-regexp flycheck esup dumb-jump dashboard company coffee-mode avy atom-one-dark-theme anzu ace-jump-mode))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+
+(require 'ob-js)
+(defvaralias 'lazy-highlight-face 'isearch-lazy-highlight)
