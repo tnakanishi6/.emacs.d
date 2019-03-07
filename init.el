@@ -1,5 +1,4 @@
 (setq warning-minimum-level :emergency)
-
 ;; initial settings
 (require 'cl)
 (global-set-key "\C-z" nil)
@@ -22,7 +21,7 @@
                   (setenv "PATH"(concat "c:/Program Files (x86)/PuTTY;" (getenv "PATH")))
                   (add-to-list 'exec-path"c:/Program Files (x86)/PuTTY;")))
 (if (mac?) (progn
-
+             (setq scheme-program-name "/Users/nakanishi/homebrew/bin/gosh -i")
              (let* ((font-family "Source Code Pro")
                     (font-size 12)
                     (font-height (* font-size 10))
@@ -93,6 +92,23 @@
   (let ((str (buffer-substring-no-properties (point-at-bol) (point-at-eol))))
     (insert (concat "->set" (s-upper-camel-case str) "($inputData['" str "'])" "\n"))
     (kill-line)))
+
+(defun toggle-camelcase-underscores ()
+  "Toggle between camelcase and underscore notation for the symbol at point."
+  (interactive)
+  (save-excursion
+    (let* ((bounds (bounds-of-thing-at-point 'symbol))
+           (start (car bounds))
+           (end (cdr bounds))
+           (currently-using-underscores-p (progn (goto-char start)
+                                                 (re-search-forward "_" end t))))
+      (if currently-using-underscores-p
+          (progn
+            (upcase-initials-region start end)
+            (replace-string "_" "" nil start end)
+            (downcase-region start (1+ start)))
+        (replace-regexp "\\([A-Z]\\)" "_\\1" nil (1+ start) end)
+        (downcase-region start (cdr (bounds-of-thing-at-point 'symbol)))))))
 
 (defun php-class-validation-from-string()
   (interactive)
@@ -189,13 +205,23 @@
 (setq ediff-split-window-function 'split-window-horizontally)
 
 ;; eshell
-(add-hook 'set-language-environment-hook
-          (lambda ()
-            (when (equal "ja_JP.UTF-8" (getenv "LANG"))
-              (setq default-process-coding-system '(utf-8 . utf-8))
-              (setq default-file-name-coding-system 'utf-8))
-            (when (equal "Japanese" current-language-environment)
-              (setq default-buffer-file-coding-system 'iso-2022-jp))))
+(progn
+  (add-hook 'set-language-environment-hook
+            (lambda ()
+              (when (equal "ja_JP.UTF-8" (getenv "LANG"))
+                (setq default-process-coding-system '(utf-8 . utf-8))
+                (setq default-file-name-coding-system 'utf-8))
+              (when (equal "Japanese" current-language-environment)
+                (setq default-buffer-file-coding-system 'iso-2022-jp))))
+  (defun eshell-on-current-dir (&optional arg)
+    "invoke eshell and cd to current directory"
+    (interactive "P")
+    (let ((dir default-directory))
+      (eshell arg)
+      (cd dir))
+    (eshell-emit-prompt)
+    (goto-char (point-max))))
+
 
 ;;whitespace
 (require 'whitespace)
@@ -214,13 +240,22 @@
 (require 'package)
 (add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"));; MELPAを追加
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-(add-to-list 'package-archives  '("marmalade" . "http://marmalade-repo.org/packages/"));; Marmaladeを追加
-;;(add-to-list 'package-archives  '("melpa" . "http://melpa.org/packages/"));; 
+;;(add-to-list 'package-archives  '("marmalade" . "http://marmalade-repo.org/packages/"));; Marmaladeを追加
+(add-to-list 'package-archives  '("melpa" . "http://melpa.org/packages/"));; 
 (package-initialize)
 
 (when (not (package-installed-p 'use-package))
   (package-refresh-contents)
   (package-install 'use-package))
+
+
+(use-package doom-themes
+  :ensure t
+  ;;:disabled t
+  :config (progn
+            (load-theme 'doom-one t)
+            (doom-themes-enable-italic t)
+            (doom-themes-enable-bold t)))
 
 (use-package material-theme
   :ensure t
@@ -229,7 +264,7 @@
 
 (use-package atom-one-dark-theme
   :ensure t
-  ;;:disabled t
+  :disabled t
   :config (load-theme 'atom-one-dark t))
 
 (use-package monokai-theme
@@ -243,64 +278,63 @@
   :config (progn (setq elscreen-prefix-key (kbd "C-z"))
                  (elscreen-start)
                  (setq elscreen-tab-display-kill-screen nil)
-                 (setq elscreen-tab-display-control nil)))
+                 (setq elscreen-tab-display-control nil)
+                 (setq elscreen-buffer-to-nickname-alist
+                       '(("^dired-mode$" .
+                          (lambda ()
+                            (format "Dired(%s)" dired-directory)))
+                         ("^Info-mode$" .
+                          (lambda ()
+                            (format "Info(%s)" (file-name-nondirectory Info-current-file))))
+                         ("^mew-draft-mode$" .
+                          (lambda ()
+                            (format "Mew(%s)" (buffer-name (current-buffer)))))
+                         ("^mew-" . "Mew")
+                         ("^irchat-" . "IRChat")
+                         ("^liece-" . "Liece")
+                         ("^lookup-" . "Lookup")))
+                 (setq elscreen-mode-to-nickname-alist
+                       '(("[Ss]hell" . "shell")
+                         ("compilation" . "compile")
+                         ("-telnet" . "telnet")
+                         ("dict" . "OnlineDict")
+                         ("*WL:Message*" . "Wanderlust")))
+
+))
 
 (use-package helm-elscreen 
   :ensure t
   :config (global-set-key (kbd "C-z b") 'helm-elscreen))
 
-;; (use-package auto-complete
-;;   :ensure t
-;;   :config (progn (require 'auto-complete-config)
-;;                  (global-auto-complete-mode t)s
-;;                  (ac-config-default)
-;;                  (setq ac-delay 0.1)
-;;                  (setq ac-auto-show-menu 0.1)
-;;                  (setq ac-auto-start 3)
-;;                  (setq ac-use-menu-map t)
-;;                  (setq ac-use-fuzzy t)
-;;                  (setq ac-use-comphist t) 
-;;                  (setq ac-dwim t)
-;;                  ;;(setq-default ac-sources '(ac-source-words-in-same-mode-buffers ac-source-yasnippet))
-;;                  (setq-default ac-sources '(
-;;                                             ac-source-words-in-same-mode-buffers
-;;                                             ac-source-words-in-buffer
-;;                                             ac-source-yasnippet
-;;                                             ac-source-imenu 
-;;                                             ))
-;;                  ;;(add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140322.321/dict")
-;; ))
+(use-package company-tabnine 
+  :ensure t
+  :config (add-to-list 'company-backends #'company-tabnine)
+)
 
 (use-package company
   :ensure t
   :config (progn (global-company-mode)
-                 (add-hook 'after-init-hook 'company-statistics-mode)
-                 (setq company-transformers '(company-sort-by-statistics company-sort-by-backend-importance))
                  (setq company-idle-delay 0)
-                 (setq company-minimum-prefix-length 2)
-                 (setq completion-ignore-case t)
-                 (setq company-dabbrev-downcase nil)
-                 (global-set-key (kbd "C-M-i") 'company-complete)
+                 ;; Number the candidates (use M-1, M-2 etc to select completions).
+                 (setq company-show-numbers t)
+                 ;; Use the tab-and-go frontend.
+                 ;; Allows TAB to select and complete at the same time.
+                 (company-tng-configure-default)
+                 (setq company-frontends
+                       '(company-tng-frontend
+                         company-pseudo-tooltip-frontend
+                         company-echo-metadata-frontend))
+                 (setq company-auto-expand t)
                  (define-key company-active-map (kbd "C-n") 'company-select-next) ;; C-n, C-pで補完候補を次/前の候補を選択
                  (define-key company-active-map (kbd "C-p") 'company-select-previous)
                  (define-key company-search-map (kbd "C-n") 'company-select-next)
                  (define-key company-search-map (kbd "C-p") 'company-select-previous)
                  (define-key company-active-map (kbd "C-s") 'company-filter-candidates) ;; C-sで絞り込む
+                 (define-key company-active-map (kbd "RET") 'company-complete-selection) ;; TABで候補を設定
                  (define-key company-active-map (kbd "C-i") 'company-complete-selection) ;; TABで候補を設定
                  (define-key company-active-map (kbd "C-h") nil) ;; C-hはバックスペース割当のため無効化
                  (define-key company-active-map [tab] 'company-complete-selection) ;; TABで候補を設定
-                 (define-key company-active-map (kbd "C-f") 'company-complete-selection) ;; C-fで候補を設定
-                 (define-key emacs-lisp-mode-map (kbd "C-M-i") 'company-complete) 
-                 ;; yasnippetとの連携
-                 (defvar company-mode/enable-yas t
-                   "Enable yasnippet for all backends.")
-                 (defun company-mode/backend-with-yas (backend)
-                   (if (or (not company-mode/enable-yas) (and (listp backend) (member 'company-yasnippet backend)))
-                       backend
-                     (append (if (consp backend) backend (list backend))
-                             '(:with company-yasnippet))))
-                 (setq company-backends (mapcar #'company-mode/backend-with-yas company-backends))
-                 ))
+                 (define-key global-map (kbd "C-M-i") 'company-complete)))
 
 (use-package smartparens
   :ensure t
@@ -519,6 +553,12 @@
          ("\\.html" . web-mode)
          ("\\.vue" . web-mode)))
 
+(use-package clojure-mode
+  :ensure t
+  :mode (("\\.clj" . clojure-mode)
+         ("\\.cljs" . clojure-mode)
+         ("\\.cljc" . clojure-mode)))
+
 (use-package magit
   :ensure t
   :bind (("C-x g" . magit-status)
@@ -574,7 +614,7 @@
 (use-package coffee-mode
   :ensure t
   :defer t
-  :mode (("\.js$" . js2-mode))
+  :mode (("\\.coffee$" . js2-mode))
   :config (progn (add-hook 'coffee-mode-hook (lambda ()
                                             (setq tab-width 4)
                                             (setq indent-tabs-mode t)))))
@@ -590,7 +630,9 @@
 
 (use-package helm-projectile
   :ensure t
-  ;;:bind (("C-c C-p" . helm-projectile-switch-project))
+  :bind (("C-c p p" . helm-projectile-switch-project)
+         ("C-c p f" . helm-projectile)
+         ("C-c p g" . helm-projectile-ag))
   :init (progn
           (projectile-global-mode)
           (helm-projectile-on)
@@ -623,12 +665,12 @@
 
 (setq org-directory "~/org")
 (setq org-capture-templates
-   '(("t" "Todo" entry (file (expand-file-name (concat org-directory "/todo.org")))
+   '(("t" "Todo" entry (file "~/org/todo.org")
       "* TODO %?\n    %i\n   %a\n    %T")
-     ("n" "note" entry (file (expand-file-name (concat org-directory "/notes.org")))
+     ("n" "note" entry (file "~/org/note.org")
       "* %?\n   %a\n    %T")
-     ("r" "reading" entry (file (expand-file-name (concat org-directory "/reading.org")))
-      "* %?\n   %a\n    %T")))
+     ("c" "Code" entry (file "~/org/code.org")
+      "* %?\n   %a\n    %T\n    %F")))
 (global-set-key "\C-cc" 'org-capture)
 
 ;; language settings
@@ -682,6 +724,14 @@
   :mode (("\.puml$" . plantuml-mode) ("\.plantuml$" . plantuml-mode))
   :config (progn
       (powerline-my-theme)))
+
+(use-package google-translate
+  :ensure t
+  :config (progn
+            (global-set-key "\C-ct" 'google-translate-at-point)
+            (custom-set-variables
+             '(google-translate-default-source-language "en")
+             '(google-translate-default-target-language "ja"))))
 
 
 (defun powerline-my-theme ()
@@ -739,11 +789,9 @@
 (use-package dumb-jump
   :ensure t
   :config (progn
-            (setq dumb-jump-default-project "")
             (setq dumb-jump-force-searcher 'ag)
             (global-set-key (kbd "C-M-w") 'dumb-jump-go-other-window)
-            (dumb-jump-mode)
-            ))
+            (dumb-jump-mode)))
 
 (use-package foreign-regexp
   :ensure t
@@ -753,6 +801,14 @@
             (global-set-key (kbd "C-M-r") 'foreign-regexp/isearch-backward)
             (global-set-key (kbd "C-M-%") 'foreign-regexp/query-replace)
             '(reb-re-syntax 'foreign-regexp)))
+
+(use-package popwin
+  :ensure t
+  :config (progn
+            (add-to-list 'popwin:special-display-config
+                         '("*eshell*" :regexp t :dedicated t :position bottom :height 0.3))
+            (add-to-list 'popwin:special-display-config
+                         '("*Google Translate*" ))))
 
 (add-to-list 'load-path "~/.emacs.d/lisp")
 (load "~/.emacs.d/private/settings")
@@ -770,23 +826,14 @@
 (global-set-key (kbd "M-z") 'avy-zap-up-to-char)
 (require 'tramp)
 
-
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(foreign-regexp/regexp-type (quote perl))
- '(package-selected-packages
-   (quote
-    (elscreen ag helm-ag graphql nodejs-repl sudden-death company-statistics yasnippet web-mode volatile-highlights visual-regexp-steroids use-package undo-tree tabbar switch-window swiper-helm smartrep smartparens sequential-command scss-mode rainbow-delimiters powerline plantuml-mode php-mode php-boris-minor-mode paredit org-present open-junk-file multiple-cursors moccur-edit magit js2-mode helm-tramp helm-rg helm-projectile helm-hunks helm-ext git-gutter foreign-regexp flycheck esup dumb-jump dashboard company coffee-mode avy atom-one-dark-theme anzu ace-jump-mode))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
-
-
 (require 'ob-js)
 (defvaralias 'lazy-highlight-face 'isearch-lazy-highlight)
+
+(setf wgrep-enable-key "e")
+(setq wgrep-auto-save-buffer t)
+(setq wgrep-change-readonly-file t)
+
+(defhydra hydra-zoom (global-map "C-x C-0") 
+  "zoom" 
+  ("g" text-scale-increase "in")
+  ("l" text-scale-decrease "out"))
