@@ -49,8 +49,31 @@
                  (add-to-list 'face-font-rescale-alist (cons jp-font-family 1))))))
 
 (if (linux?) (progn 
-               (set-fontset-font nil 'japanese-jisx0208 (font-spec :family "Yutapon coding Regular"));; font 設定
-               (setq face-font-rescale-alist '(("Yutapon coding Regular" . 1.08)))))
+               (let* ((font-family "Source Code Pro")
+                      (font-size 10)
+                      (font-height (* font-size 10))
+                      (jp-font-family "Ricty Diminished")
+                      ;;(jp-font-family "Hiragino Kaku Gothic ProN")
+                      )
+                 (set-face-attribute 'default nil :family font-family :height font-height)
+                 (let ((name (frame-parameter nil 'font))
+                       (jp-font-spec (font-spec :family jp-font-family))
+                       (jp-characters '(katakana-jisx0201
+                                        cp932-2-byte
+                                        japanese-jisx0212
+                                        japanese-jisx0213-2
+                                        japanese-jisx0213.2004-1))
+                       (font-spec (font-spec :family font-family))
+                       (characters '((?\u00A0 . ?\u00FF)    ; Latin-1
+                                     (?\u0100 . ?\u017F)    ; Latin Extended-A
+                                     (?\u0180 . ?\u024F)    ; Latin Extended-B
+                                     (?\u0250 . ?\u02AF)    ; IPA Extensions
+                                     (?\u0370 . ?\u03FF)))) ; Greek and Coptic
+                   (dolist (jp-character jp-characters)
+                     (set-fontset-font name jp-character jp-font-spec))
+                   (dolist (character characters)
+                     (set-fontset-font name character font-spec))
+                   (add-to-list 'face-font-rescale-alist (cons jp-font-family 1))))))
 
 ;; bookmark settings
 (setq bookmark-save-flag 1)
@@ -155,7 +178,7 @@
 (setq inhibit-startup-message t) ;; hide wellcome page
 (setq-default line-spacing 7) ;; line-spacing
 (add-to-list 'default-frame-alist '(cursor-type . bar)) ;; cursor-type
-(set-frame-parameter nil 'alpha 92) ;; window-transparent
+(set-frame-parameter nil 'alpha 97) ;; window-transparent
 (setq-default tab-width 2 indent-tabs-mode nil) ;;default tab-mode
 ;;インデントをタブでするかスペースでするか
 (setq-default truncate-lines t) (setq-default truncate-partial-width-windows t) ;; no truncate-lines
@@ -244,9 +267,10 @@
 (add-to-list 'package-archives  '("melpa" . "http://melpa.org/packages/"));; 
 (package-initialize)
 
-(when (not (package-installed-p 'use-package))
-  (package-refresh-contents)
-  (package-install 'use-package))
+(when (not package-archive-contents)
+  (package-refresh-contents))
+(package-install 'use-package)
+
 
 
 (use-package doom-themes
@@ -594,10 +618,24 @@
   (progn (add-hook 'php-mode-hook 'flycheck-mode)
          (add-hook 'web-mode-hook 'flycheck-mode)))
 
-(use-package js2-mode
+(use-package rjsx-mode
   :ensure t
   :defer t
-  :mode (("\.js$" . js2-mode))
+  :mode (("\\.js$" . rjsx-mode)
+         ("\\.jsx$" . rjsx-mode))
+  :config (progn
+            (add-hook 'rjsx-mode-hook (lambda ()
+                                        (setq indent-tabs-mode nil)
+                                        (setq js-indent-level 2)
+                                        (setq js2-strict-missing-semi-warning nil)))))
+
+
+(use-package js2-mode
+  :disabled t
+  :ensure t
+  :defer t
+  :mode (("\\.js$" . js2-jsx-mode)
+         ("\\.jsx$" . js2-jsx-mode))
   :config (progn
             (add-hook 'js-mode-hook (lambda ()
                                       (setq js2-cleanup-whitespace nil
