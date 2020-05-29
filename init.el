@@ -311,7 +311,6 @@
 (use-package switch-window :ensure t
   :config (progn
             (setq switch-window-shortcut-style 'qwerty)
-            (add-hook 'switch-window-finish-hook 'golden-ratio)
             (global-set-key (kbd "C-x o") 'switch-window)))
 ;; ------ IMPLEMENTATION CODING
 (use-package sequential-command :ensure t :defer t
@@ -329,9 +328,11 @@
 (use-package company :ensure t
   :config (progn (global-company-mode)
                  (setq company-idle-delay 0)
+                 (setq company-minimum-prefix-length 2)
+                 (setq company-dabbrev-downcase nil)
                  (setq company-show-numbers t)
                  (company-tng-configure-default)
-                 (setq company-frontends '(company-tng-frontend company-echo-metadata-frontend))
+                 (setq company-frontends '(company-tng-frontend company-pseudo-tooltip-frontend company-echo-metadata-frontend))
                  (setq company-auto-expand t)
                  (define-key company-active-map (kbd "C-n") 'company-select-next) ;; C-n, C-pで補完候補を次/前の候補を選択
                  (define-key company-active-map (kbd "C-p") 'company-select-previous)
@@ -343,6 +344,7 @@
                  (define-key company-active-map (kbd "C-h") nil) ;; C-hはバックスペース割当のため無効化
                  (define-key company-active-map [tab] 'company-complete-selection) ;; TABで候補を設定
                  (define-key global-map (kbd "C-M-i") 'company-complete)))
+
 
 (use-package yasnippet :ensure t
   :init
@@ -516,3 +518,4 @@
 
 (setq simplenote2-markdown-notes-mode (quote org-mode))
 (simplenote2-setup)
+
