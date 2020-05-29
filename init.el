@@ -224,7 +224,7 @@
 (setq whitespace-style '(face trailings spaces space-mark tab-mark tabs))
 (setq whitespace-action '(auto-cleanup))
 (setq whitespace-space-regexp "\\([\u3000\uFE0E]+\\)")
-(set-face-foreground 'whitespace-space "DarkOrange1") ;;　
+(set-face-foreground 'whitespace-space "DarkOrange") ;;　
 (setq whitespace-display-mappings '((space-mark ?\u3000 [?\u25a1]) (space-mark ?\uFE0E [?\u25a1]) (tab-mark ?\t [?\u00BB ?\t] [?\\ ?\t])))
 (global-whitespace-mode 1)
 (use-package doom-themes :ensure t ;:disabled t
