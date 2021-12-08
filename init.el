@@ -143,9 +143,7 @@
     (goto-char (point-max))))
 
 (require 'package)
-(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"));; MELPAを追加
 (add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
-(add-to-list 'package-archives  '("marmalade" . "http://marmalade-repo.org/packages/"));; Marmaladeを追加
 (add-to-list 'package-archives  '("melpa" . "http://melpa.org/packages/"));;
 (package-initialize)
 
